@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import DigestCard from "@/app/components/DigestCard";
 import NotificationBanner from "@/app/components/NotificationBanner";
+import GoalsSection from "@/app/components/GoalsSection";
 
 interface SSIData {
   countable_assets: number;
@@ -134,6 +135,8 @@ export default function SSIDashboard() {
       >
         Update Assets
       </Link>
+
+      <GoalsSection userId={userId} incomeType="ssi" />
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import DigestCard from "@/app/components/DigestCard";
 import NotificationBanner from "@/app/components/NotificationBanner";
+import GoalsSection from "@/app/components/GoalsSection";
 
 interface W2Data {
   configured: boolean;
@@ -182,6 +183,8 @@ export default function W2Dashboard() {
           >
             Edit Pay Settings
           </button>
+
+          <GoalsSection userId={userId} incomeType="w2" />
         </>
       )}
 

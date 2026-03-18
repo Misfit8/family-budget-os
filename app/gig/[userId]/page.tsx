@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import DigestCard from "@/app/components/DigestCard";
 import NotificationBanner from "@/app/components/NotificationBanner";
+import GoalsSection from "@/app/components/GoalsSection";
 
 interface BufferData {
   balance: number;
@@ -196,6 +197,9 @@ export default function GigDashboard() {
           Patterns ✦
         </Link>
       </div>
+
+      {/* Savings Goals */}
+      <GoalsSection userId={userId} incomeType="gig" />
 
       {/* Recent runs */}
       <div>
