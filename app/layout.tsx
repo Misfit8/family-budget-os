@@ -17,12 +17,17 @@ export const metadata: Metadata = {
   title: "Family Budget OS",
   description: "Household finance tracker for multi-income families",
   manifest: "/manifest.json",
+  icons: {
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
+    apple: "/icon-192.png",
+  },
 };
 
 export const viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#16a34a",
+  themeColor: "#2563eb",
   colorScheme: "light dark",
 };
 
