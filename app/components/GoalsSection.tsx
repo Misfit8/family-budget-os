@@ -141,7 +141,10 @@ export default function GoalsSection({
             <input type="number" step="0.01" min="0" placeholder="$/month" value={monthly} onChange={(e) => setMonthly(e.target.value)} className="input" />
           </div>
 
-          <input type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} className="input" />
+          <div className="flex flex-col gap-1">
+            <label className="text-xs text-zinc-400 uppercase tracking-wide">Target Deadline (optional)</label>
+            <input type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} className="input" />
+          </div>
 
           <div className="flex gap-4">
             <label className="flex items-center gap-2 text-sm text-zinc-600 cursor-pointer">
