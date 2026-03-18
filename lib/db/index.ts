@@ -8,6 +8,7 @@ let db: Database.Database;
 
 export function getDb(): Database.Database {
   if (!db) {
+    fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
     db = new Database(DB_PATH);
     db.pragma("journal_mode = WAL");
     initSchema(db);
@@ -36,6 +37,7 @@ function initSchema(db: Database.Database) {
       platform TEXT DEFAULT 'Uber Eats',
       uber_fee REAL DEFAULT 0,
       net REAL,
+      note TEXT,
       created_at TEXT DEFAULT (datetime('now'))
     );
     CREATE TABLE IF NOT EXISTS buffer (
@@ -85,6 +87,9 @@ function initSchema(db: Database.Database) {
       updated_at TEXT DEFAULT (datetime('now'))
     );
   `);
+
+  // Migrations
+  try { db.exec("ALTER TABLE runs ADD COLUMN note TEXT"); } catch { /* already exists */ }
 
   // Seed family members if not already seeded
   const count = (db.prepare("SELECT COUNT(*) as c FROM users").get() as { c: number }).c;
