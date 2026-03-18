@@ -33,8 +33,6 @@ interface HubData {
   month: string;
 }
 
-const NAMES: Record<number, string> = { 1: "Mom", 2: "Dad", 3: "Braddon", 4: "Bro1", 5: "Bro2" };
-
 function runwayColor(days: number | null) {
   if (days === null) return "text-zinc-400";
   if (days > 14) return "text-emerald-500";
