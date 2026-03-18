@@ -1,0 +1,17 @@
+{
+  "name": "Family Budget OS",
+  "short_name": "Budget OS",
+  "description": "Household finance tracker for multi-income families",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fafafa",
+  "theme_color": "#16a34a",
+  "icons": [
+    {
+      "src": "/icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -16,6 +16,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Family Budget OS",
   description: "Household finance tracker for multi-income families",
+  manifest: "/manifest.json",
 };
 
 export const viewport = {
