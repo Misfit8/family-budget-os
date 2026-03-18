@@ -1,7 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import DigestCard from "@/app/components/DigestCard";
+import NotificationBanner from "@/app/components/NotificationBanner";
+import GoalsSection from "@/app/components/GoalsSection";
 
 interface BufferData {
   balance: number;
@@ -29,38 +32,41 @@ function runwayColor(days: number | null) {
 
 function getMonday(): string {
   const now = new Date();
-  const day = now.getDay();
   const monday = new Date(now);
-  monday.setDate(now.getDate() - ((day + 6) % 7));
+  monday.setDate(now.getDate() - ((now.getDay() + 6) % 7));
   return monday.toISOString().slice(0, 10);
 }
 
-export default function GigHousehold() {
-  const [momBuffer, setMomBuffer] = useState<BufferData | null>(null);
-  const [dadBuffer, setDadBuffer] = useState<BufferData | null>(null);
-  const [momRuns, setMomRuns] = useState<Run[]>([]);
-  const [dadRuns, setDadRuns] = useState<Run[]>([]);
+const WEEKLY_TARGET = 1600;
+
+export default function ParentsDashboard() {
+  const [buf1, setBuf1] = useState<BufferData | null>(null);
+  const [buf2, setBuf2] = useState<BufferData | null>(null);
+  const [runs, setRuns] = useState<Run[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function load() {
-      const [mbRes, dbRes, mrRes, drRes] = await Promise.all([
-        fetch("/api/buffer/1"),
-        fetch("/api/buffer/2"),
-        fetch("/api/runs/1"),
-        fetch("/api/runs/2"),
-      ]);
-      const [mb, db, mr, dr] = await Promise.all([
-        mbRes.json(), dbRes.json(), mrRes.json(), drRes.json(),
-      ]);
-      setMomBuffer(mb);
-      setDadBuffer(db);
-      setMomRuns(mr.map((r: Run) => ({ ...r, user_id: 1 })));
-      setDadRuns(dr.map((r: Run) => ({ ...r, user_id: 2 })));
-      setLoading(false);
-    }
-    load();
+  const load = useCallback(async () => {
+    const [b1Res, b2Res, r1Res, r2Res] = await Promise.all([
+      fetch("/api/buffer/1"),
+      fetch("/api/buffer/2"),
+      fetch("/api/runs/1"),
+      fetch("/api/runs/2"),
+    ]);
+    const [b1, b2, r1, r2] = await Promise.all([
+      b1Res.json(), b2Res.json(), r1Res.json(), r2Res.json(),
+    ]);
+    setBuf1(b1);
+    setBuf2(b2);
+    // Merge runs, label user_id, sort by date desc
+    const merged: Run[] = [
+      ...r1.map((r: Run) => ({ ...r, user_id: 1 })),
+      ...r2.map((r: Run) => ({ ...r, user_id: 2 })),
+    ].sort((a, b) => b.date.localeCompare(a.date));
+    setRuns(merged);
+    setLoading(false);
   }, []);
+
+  useEffect(() => { load(); }, [load]);
 
   if (loading) {
     return (
@@ -70,153 +76,130 @@ export default function GigHousehold() {
     );
   }
 
-  // Combined buffer stats
-  const totalBalance = (momBuffer?.balance ?? 0) + (dadBuffer?.balance ?? 0);
-  const totalBurn = (momBuffer?.avgDailyBurn ?? 0) + (dadBuffer?.avgDailyBurn ?? 0);
-  const combinedRunway = totalBurn > 0 ? totalBalance / totalBurn : null;
+  // Combined stats
+  const totalBalance = (buf1?.balance ?? 0) + (buf2?.balance ?? 0);
+  const totalBurn = (buf1?.avgDailyBurn ?? 0) + (buf2?.avgDailyBurn ?? 0);
+  const runway = totalBurn > 0 ? totalBalance / totalBurn : null;
 
-  // This week's earnings
+  // This week
   const cutoff = getMonday();
-  const momWeek = momRuns.filter((r) => r.date >= cutoff).reduce((s, r) => s + r.net, 0);
-  const dadWeek = dadRuns.filter((r) => r.date >= cutoff).reduce((s, r) => s + r.net, 0);
-  const totalWeek = momWeek + dadWeek;
-  const weeklyTarget = 1600; // combined household target
-  const weekPct = Math.min(100, weeklyTarget > 0 ? (totalWeek / weeklyTarget) * 100 : 0);
+  const weekEarnings = runs.filter((r) => r.date >= cutoff).reduce((s, r) => s + r.net, 0);
+  const weekPct = Math.min(100, WEEKLY_TARGET > 0 ? (weekEarnings / WEEKLY_TARGET) * 100 : 0);
 
-  // Merged recent runs, sorted by date desc
-  const allRuns = [...momRuns, ...dadRuns]
-    .sort((a, b) => b.date.localeCompare(a.date))
-    .slice(0, 15);
+  // Trailing 7-day avg
+  const trailCutoff = new Date();
+  trailCutoff.setDate(trailCutoff.getDate() - 7);
+  const trailStr = trailCutoff.toISOString().slice(0, 10);
+  const trailingAvg = (() => {
+    const recent = runs.filter((r) => r.date >= trailStr);
+    if (recent.length === 0) return 0;
+    return recent.reduce((s, r) => s + r.net, 0) / 7;
+  })();
 
   return (
     <div className="min-h-screen bg-zinc-50 px-4 py-8 max-w-md mx-auto">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <Link href="/" className="text-zinc-400 text-sm">← Home</Link>
-        <h1 className="text-lg font-semibold text-zinc-800">Mom + Dad</h1>
+        <h1 className="text-lg font-semibold text-zinc-800">Parents</h1>
         <span className="text-xs text-zinc-400 uppercase">Gig</span>
       </div>
 
-      {/* Combined Runway — Primary KPI */}
+      <NotificationBanner userId="1" />
+      <DigestCard userId="1" />
+
+      {/* Runway */}
       <div className="bg-white rounded-2xl border border-zinc-200 p-6 mb-4 text-center">
-        <p className="text-xs text-zinc-400 uppercase tracking-widest mb-2">Combined Runway</p>
-        <p
-          className={`font-bold leading-none ${runwayColor(combinedRunway)}`}
-          style={{ fontSize: "72px" }}
-        >
-          {combinedRunway !== null ? Math.floor(combinedRunway) : "—"}
+        <p className="text-xs text-zinc-400 uppercase tracking-widest mb-2">Runway</p>
+        <p className={`font-bold leading-none ${runwayColor(runway)}`} style={{ fontSize: "72px" }}>
+          {runway !== null ? Math.floor(runway) : "—"}
         </p>
         <p className="text-zinc-400 text-sm mt-1">days</p>
-        {combinedRunway !== null && combinedRunway < 7 && (
+        {runway !== null && runway < 7 && (
           <p className="mt-2 text-xs text-red-500 font-medium">Top up your buffer soon.</p>
         )}
         <p className="mt-3 text-xs text-zinc-400">
           Buffer: <span className="text-zinc-700 font-medium">${totalBalance.toFixed(2)}</span>
-          {totalBurn > 0 && (
-            <span> · Burn: ${totalBurn.toFixed(2)}/day</span>
-          )}
+          {totalBurn > 0 && <span> · Burn: ${totalBurn.toFixed(2)}/day</span>}
         </p>
       </div>
 
-      {/* Individual buffer split */}
-      <div className="grid grid-cols-2 gap-3 mb-4">
-        <div className="bg-white rounded-2xl border border-zinc-200 p-4 text-center">
-          <p className="text-xs text-zinc-400 mb-1">Mom's Buffer</p>
-          <p className="text-xl font-bold text-zinc-800">${(momBuffer?.balance ?? 0).toFixed(0)}</p>
-          <p className={`text-xs mt-1 ${runwayColor(momBuffer?.runway ?? null)}`}>
-            {momBuffer?.runway != null ? `${Math.floor(momBuffer.runway)}d runway` : "No burn data"}
-          </p>
-        </div>
-        <div className="bg-white rounded-2xl border border-zinc-200 p-4 text-center">
-          <p className="text-xs text-zinc-400 mb-1">Dad's Buffer</p>
-          <p className="text-xl font-bold text-zinc-800">${(dadBuffer?.balance ?? 0).toFixed(0)}</p>
-          <p className={`text-xs mt-1 ${runwayColor(dadBuffer?.runway ?? null)}`}>
-            {dadBuffer?.runway != null ? `${Math.floor(dadBuffer.runway)}d runway` : "No burn data"}
-          </p>
-        </div>
-      </div>
-
-      {/* This week combined */}
+      {/* This week */}
       <div className="bg-white rounded-2xl border border-zinc-200 p-5 mb-4">
         <p className="text-xs text-zinc-400 uppercase tracking-widest mb-3">This Week</p>
-        <div className="flex items-end justify-between mb-3">
+        <div className="flex items-end justify-between">
           <div>
-            <p className="text-3xl font-bold text-zinc-800">${totalWeek.toFixed(0)}</p>
-            <p className="text-xs text-zinc-400">combined net</p>
+            <p className="text-3xl font-bold text-zinc-800">${weekEarnings.toFixed(0)}</p>
+            <p className="text-xs text-zinc-400">earned net</p>
           </div>
           <div className="text-right">
-            <p className="text-lg font-semibold text-zinc-500">${weeklyTarget}</p>
+            <p className="text-lg font-semibold text-zinc-500">${WEEKLY_TARGET}</p>
             <p className="text-xs text-zinc-400">target</p>
           </div>
         </div>
-        <div className="h-2 bg-zinc-100 rounded-full overflow-hidden mb-2">
+        <div className="mt-3 h-2 bg-zinc-100 rounded-full overflow-hidden">
           <div
-            className={`h-full rounded-full transition-all ${
-              weekPct >= 100 ? "bg-emerald-500" : "bg-amber-400"
-            }`}
+            className={`h-full rounded-full transition-all ${weekPct >= 100 ? "bg-emerald-500" : "bg-amber-400"}`}
             style={{ width: `${weekPct}%` }}
           />
         </div>
-        {/* Individual breakdown */}
-        <div className="grid grid-cols-2 gap-2 mt-3 text-xs text-zinc-500">
-          <div className="bg-zinc-50 rounded-lg px-3 py-2">
-            <p className="text-zinc-400 mb-0.5">Mom</p>
-            <p className="font-semibold text-zinc-700">${momWeek.toFixed(0)}</p>
-          </div>
-          <div className="bg-zinc-50 rounded-lg px-3 py-2">
-            <p className="text-zinc-400 mb-0.5">Dad</p>
-            <p className="font-semibold text-zinc-700">${dadWeek.toFixed(0)}</p>
-          </div>
+        <div className="flex justify-between mt-1">
+          <span className="text-xs text-zinc-400">
+            {weekEarnings >= WEEKLY_TARGET ? "Target hit!" : `$${(WEEKLY_TARGET - weekEarnings).toFixed(0)} to go`}
+          </span>
+          <span className="text-xs text-zinc-400">{Math.round(weekPct)}%</span>
         </div>
       </div>
 
-      {/* Action nav */}
+      {/* Trailing avg */}
+      <div className="bg-white rounded-2xl border border-zinc-200 p-5 mb-6">
+        <p className="text-xs text-zinc-400 uppercase tracking-widest mb-1">7-Day Daily Avg</p>
+        <p className="text-2xl font-bold text-zinc-800">${trailingAvg.toFixed(2)}</p>
+        <p className="text-xs text-zinc-400">net per day</p>
+      </div>
+
+      {/* Nav */}
       <div className="grid grid-cols-2 gap-3 mb-6">
-        <Link
-          href="/gig/1/log"
-          className="bg-zinc-800 text-white rounded-xl py-3 text-center text-sm font-medium hover:bg-zinc-700 transition-colors"
-        >
-          + Mom's Run
+        <Link href="/gig/household/log"
+          className="bg-zinc-800 text-white rounded-xl py-3 text-center text-sm font-medium hover:bg-zinc-700 transition-colors">
+          + Log Run
         </Link>
-        <Link
-          href="/gig/2/log"
-          className="bg-zinc-800 text-white rounded-xl py-3 text-center text-sm font-medium hover:bg-zinc-700 transition-colors"
-        >
-          + Dad's Run
+        <Link href="/gig/household/buffer"
+          className="bg-white border border-zinc-200 text-zinc-700 rounded-xl py-3 text-center text-sm font-medium hover:border-zinc-400 transition-colors">
+          Buffer
         </Link>
-        <Link
-          href="/gig/1"
-          className="bg-white border border-zinc-200 text-zinc-700 rounded-xl py-3 text-center text-sm font-medium hover:border-zinc-400 transition-colors"
-        >
-          Mom's Dashboard
+        <Link href="/gig/1/import"
+          className="bg-white border border-zinc-200 text-zinc-700 rounded-xl py-3 text-center text-sm font-medium hover:border-zinc-400 transition-colors">
+          Import PDF
         </Link>
-        <Link
-          href="/gig/2"
-          className="bg-white border border-zinc-200 text-zinc-700 rounded-xl py-3 text-center text-sm font-medium hover:border-zinc-400 transition-colors"
-        >
-          Dad's Dashboard
+        <Link href="/gig/household/tax"
+          className="bg-white border border-zinc-200 text-zinc-700 rounded-xl py-3 text-center text-sm font-medium hover:border-zinc-400 transition-colors">
+          Tax Tracker
+        </Link>
+        <Link href="/gig/1/patterns"
+          className="bg-white border border-zinc-200 text-zinc-700 rounded-xl py-3 text-center text-sm font-medium hover:border-zinc-400 transition-colors">
+          Patterns ✦
+        </Link>
+        <Link href="/debt/1"
+          className="bg-white border border-zinc-200 text-zinc-700 rounded-xl py-3 text-center text-sm font-medium hover:border-zinc-400 transition-colors">
+          Debt Freedom
         </Link>
       </div>
 
-      {/* Recent runs — both */}
-      <div>
+      <GoalsSection userId="1" incomeType="gig" />
+
+      {/* Recent runs */}
+      <div className="mt-6">
         <p className="text-xs text-zinc-400 uppercase tracking-widest mb-3">Recent Runs</p>
-        {allRuns.length === 0 ? (
-          <p className="text-zinc-400 text-sm">No runs yet.</p>
+        {runs.length === 0 ? (
+          <p className="text-zinc-400 text-sm">No runs yet. Log your first run.</p>
         ) : (
           <div className="flex flex-col gap-2">
-            {allRuns.map((r) => (
-              <div
-                key={`${r.user_id}-${r.id}`}
-                className="bg-white rounded-xl border border-zinc-200 px-4 py-3 flex justify-between items-center"
-              >
+            {runs.slice(0, 10).map((r) => (
+              <div key={`${r.user_id}-${r.id}`}
+                className="bg-white rounded-xl border border-zinc-200 px-4 py-3 flex justify-between items-center">
                 <div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-medium text-zinc-400">
-                      {r.user_id === 1 ? "Mom" : "Dad"}
-                    </span>
-                    <p className="text-sm font-medium text-zinc-800">{r.date}</p>
-                  </div>
+                  <p className="text-sm font-medium text-zinc-800">{r.date}</p>
                   <p className="text-xs text-zinc-400">
                     {r.miles > 0 ? `${r.miles} mi · ` : ""}
                     {r.hours ? `${r.hours}h` : ""}

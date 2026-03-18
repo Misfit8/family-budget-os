@@ -217,8 +217,8 @@ function initSchema(db: Database.Database) {
       "INSERT INTO users (id, household_id, name, income_type) VALUES (?, 1, ?, ?)"
     );
     const seedMany = db.transaction(() => {
-      insert.run(1, "Mom", "gig");
-      insert.run(2, "Dad", "gig");
+      insert.run(1, "Parents", "gig");
+      insert.run(2, "Parents", "gig");
       insert.run(3, "Braddon", "ssi");
       insert.run(4, "Bro1", "w2");
       insert.run(5, "Bro2", "tbd");
