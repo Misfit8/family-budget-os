@@ -14,6 +14,17 @@ export default function Home() {
       <h1 className="text-2xl font-semibold text-zinc-800 mb-1">Family Budget OS</h1>
       <p className="text-zinc-500 text-sm mb-8">Who are you?</p>
       <div className="flex flex-col gap-3 w-full max-w-xs">
+        <Link
+          href="/hub"
+          className="flex items-center gap-4 bg-zinc-800 text-white rounded-xl px-5 py-4 font-medium"
+        >
+          <span className="text-2xl">🏠</span>
+          <div>
+            <div className="font-semibold">Family Hub</div>
+            <div className="text-xs text-zinc-400 uppercase tracking-wide">household</div>
+          </div>
+        </Link>
+        <div className="border-t border-zinc-200 my-1" />
         {FAMILY.map((m) => {
           const href =
             m.type === "gig"
