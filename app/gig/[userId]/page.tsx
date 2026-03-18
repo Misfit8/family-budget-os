@@ -164,10 +164,16 @@ export default function GigDashboard() {
           + Log Run
         </Link>
         <Link
+          href={`/gig/${userId}/buffer`}
+          className="bg-white border border-zinc-200 text-zinc-700 rounded-xl py-3 text-center text-sm font-medium hover:border-zinc-400 transition-colors"
+        >
+          Buffer
+        </Link>
+        <Link
           href={`/gig/${userId}/import`}
           className="bg-white border border-zinc-200 text-zinc-700 rounded-xl py-3 text-center text-sm font-medium hover:border-zinc-400 transition-colors"
         >
-          Import CSV
+          Import PDF
         </Link>
         <Link
           href={`/gig/${userId}/tax`}
@@ -177,7 +183,7 @@ export default function GigDashboard() {
         </Link>
         <Link
           href={`/gig/${userId}/patterns`}
-          className="bg-white border border-zinc-200 text-zinc-700 rounded-xl py-3 text-center text-sm font-medium hover:border-zinc-400 transition-colors"
+          className="col-span-2 bg-white border border-zinc-200 text-zinc-700 rounded-xl py-3 text-center text-sm font-medium hover:border-zinc-400 transition-colors"
         >
           Patterns ✦
         </Link>
