@@ -29,13 +29,20 @@ export default function DebtDashboard() {
   const [data, setData] = useState<DebtData | null>(null);
   const [strategy, setStrategy] = useState<"snowball" | "avalanche">("snowball");
   const [extra, setExtra] = useState(0);
+  const [debouncedExtra, setDebouncedExtra] = useState(0);
   const [insight, setInsight] = useState<Insight | null>(null);
   const [loadingInsight, setLoadingInsight] = useState(false);
 
+  // Debounce slider: only re-fetch 400ms after user stops dragging
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedExtra(extra), 400);
+    return () => clearTimeout(t);
+  }, [extra]);
+
   const load = useCallback(async () => {
-    const res = await fetch(`/api/debt/${userId}?extra=${extra}&strategy=${strategy}`);
+    const res = await fetch(`/api/debt/${userId}?extra=${debouncedExtra}&strategy=${strategy}`);
     if (res.ok) setData(await res.json());
-  }, [userId, extra, strategy]);
+  }, [userId, debouncedExtra, strategy]);
 
   useEffect(() => { load(); }, [load]);
 

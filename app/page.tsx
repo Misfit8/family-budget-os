@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import ThemeToggle from "@/app/components/ThemeToggle";
 
 const FAMILY = [
   { id: 1, name: "Mom", type: "gig", emoji: "🛵" },
@@ -12,7 +15,12 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-zinc-50 flex flex-col items-center justify-center px-4 py-12">
       <h1 className="text-2xl font-semibold text-zinc-800 mb-1">Family Budget OS</h1>
-      <p className="text-zinc-500 text-sm mb-8">Who are you?</p>
+      <p className="text-zinc-500 text-sm mb-6">Who are you?</p>
+
+      <div className="mb-6 w-full max-w-xs">
+        <ThemeToggle />
+      </div>
+
       <div className="flex flex-col gap-3 w-full max-w-xs">
         <Link
           href="/hub"

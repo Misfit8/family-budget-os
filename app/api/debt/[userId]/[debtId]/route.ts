@@ -22,6 +22,11 @@ export async function PATCH(
 ) {
   const { userId, debtId } = await params;
   const { new_balance, date, note } = await req.json();
+
+  if (new_balance == null || Number(new_balance) < 0) {
+    return NextResponse.json({ error: "new_balance must be >= 0" }, { status: 400 });
+  }
+
   const db = getDb();
   const gid = Number(debtId);
   const uid = Number(userId);

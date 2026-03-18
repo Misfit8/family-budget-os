@@ -187,6 +187,20 @@ function initSchema(db: Database.Database) {
     );
   `);
 
+  // Indexes for query performance
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_runs_user_date        ON runs(user_id, date);
+    CREATE INDEX IF NOT EXISTS idx_buffer_user           ON buffer(user_id);
+    CREATE INDEX IF NOT EXISTS idx_buffer_user_type_date ON buffer(user_id, type, date);
+    CREATE INDEX IF NOT EXISTS idx_debts_user            ON debts(user_id);
+    CREATE INDEX IF NOT EXISTS idx_debt_payments_debt    ON debt_payments(debt_id);
+    CREATE INDEX IF NOT EXISTS idx_notifications_user    ON notifications(user_id, read);
+    CREATE INDEX IF NOT EXISTS idx_goals_user            ON savings_goals(user_id, status);
+    CREATE INDEX IF NOT EXISTS idx_digests_user          ON digests(user_id);
+    CREATE INDEX IF NOT EXISTS idx_tax_user_year         ON tax_tracker(user_id, year);
+    CREATE INDEX IF NOT EXISTS idx_ssi_user              ON ssi_assets(user_id);
+  `);
+
   // Other migrations
   try { db.exec("ALTER TABLE runs ADD COLUMN note TEXT"); } catch { /* already exists */ }
 

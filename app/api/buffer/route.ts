@@ -14,6 +14,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "type must be deposit or withdrawal" }, { status: 400 });
     }
 
+    if (Number(amount) <= 0) {
+      return NextResponse.json({ error: "amount must be > 0" }, { status: 400 });
+    }
+
     const db = getDb();
     // Store deposits as positive, withdrawals as negative
     const storedAmount = type === "withdrawal" ? -Math.abs(amount) : Math.abs(amount);

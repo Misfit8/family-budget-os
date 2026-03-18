@@ -9,7 +9,7 @@ export async function GET(
   const db = getDb();
 
   const runs = db
-    .prepare("SELECT * FROM runs WHERE user_id = ? ORDER BY date DESC")
+    .prepare("SELECT * FROM runs WHERE user_id = ? ORDER BY date DESC LIMIT 200")
     .all(Number(userId));
 
   return NextResponse.json(runs);

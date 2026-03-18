@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 interface Goal {
   id: number;
@@ -43,16 +43,16 @@ export default function GoalsSection({
   const [isAble, setIsAble] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  async function load() {
+  const load = useCallback(async () => {
     const res = await fetch(`/api/goals?user_id=${userId}`);
     if (res.ok) setGoals(await res.json());
     if (incomeType === "ssi") {
       const sr = await fetch(`/api/ssi/${userId}`);
       if (sr.ok) setSsiData(await sr.json());
     }
-  }
+  }, [userId, incomeType]);
 
-  useEffect(() => { load(); }, [userId]);
+  useEffect(() => { load(); }, [load]);
 
   async function handleAddGoal(e: React.FormEvent) {
     e.preventDefault();

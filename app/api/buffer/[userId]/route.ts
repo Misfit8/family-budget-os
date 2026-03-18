@@ -10,7 +10,7 @@ export async function GET(
   const uid = Number(userId);
 
   const history = db
-    .prepare("SELECT * FROM buffer WHERE user_id = ? ORDER BY date DESC")
+    .prepare("SELECT * FROM buffer WHERE user_id = ? ORDER BY date DESC LIMIT 100")
     .all(uid) as { amount: number; date: string; type: string; note: string }[];
 
   const balance = (

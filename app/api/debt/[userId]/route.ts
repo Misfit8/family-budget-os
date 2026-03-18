@@ -38,8 +38,22 @@ export async function POST(
   const body = await req.json();
   const { name, balance, minimum_payment, interest_rate, debt_type, is_shared } = body;
 
-  if (!name || balance == null || minimum_payment == null) {
-    return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+  const VALID_DEBT_TYPES = ["credit_card", "loan", "medical", "student", "other"];
+
+  if (!name || typeof name !== "string" || name.trim().length === 0) {
+    return NextResponse.json({ error: "name is required" }, { status: 400 });
+  }
+  if (balance == null || Number(balance) < 0) {
+    return NextResponse.json({ error: "balance must be >= 0" }, { status: 400 });
+  }
+  if (minimum_payment == null || Number(minimum_payment) < 0) {
+    return NextResponse.json({ error: "minimum_payment must be >= 0" }, { status: 400 });
+  }
+  if (interest_rate != null && (Number(interest_rate) < 0 || Number(interest_rate) > 100)) {
+    return NextResponse.json({ error: "interest_rate must be 0–100" }, { status: 400 });
+  }
+  if (debt_type && !VALID_DEBT_TYPES.includes(debt_type)) {
+    return NextResponse.json({ error: "invalid debt_type" }, { status: 400 });
   }
 
   const db = getDb();
@@ -47,8 +61,8 @@ export async function POST(
     INSERT INTO debts (user_id, name, balance, original_balance, minimum_payment, interest_rate, debt_type, is_shared)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
   `).run(
-    Number(userId), name, balance, balance,
-    minimum_payment, interest_rate ?? 0,
+    Number(userId), name.trim(), Number(balance), Number(balance),
+    Number(minimum_payment), Number(interest_rate ?? 0),
     debt_type ?? "other", is_shared ? 1 : 0
   );
 
