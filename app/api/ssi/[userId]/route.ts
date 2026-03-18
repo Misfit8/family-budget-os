@@ -41,6 +41,11 @@ export async function POST(
 ) {
   const { userId } = await params;
   const { countable_assets, able_account } = await req.json();
+
+  if (Number(countable_assets) < 0 || Number(able_account) < 0) {
+    return NextResponse.json({ error: "Asset values must be 0 or more" }, { status: 400 });
+  }
+
   const db = getDb();
   const uid = Number(userId);
 

@@ -32,6 +32,7 @@ function runwayColor(days: number | null) {
 
 function runwayLabel(days: number | null) {
   if (days === null) return null;
+  if (days < 0) return "Buffer is overdrawn — deposit to restore runway";
   if (days > 14) return "You're in good shape";
   if (days >= 7) return "Start building your buffer";
   return "Top up your buffer soon";
@@ -117,10 +118,12 @@ export default function ParentsDashboard() {
           <p className="text-xs text-zinc-400 uppercase tracking-widest">Runway</p>
           <HelpTip explanation="How many days your buffer savings can cover household expenses. Green = 14+ days. Yellow = 7–14 days. Red = under 7 days." />
         </div>
-        <p className={`font-bold leading-none ${runwayColor(runway)}`} style={{ fontSize: "72px" }}>
-          {runway !== null ? Math.floor(runway) : "—"}
+        <p className={`font-bold leading-none ${runwayColor(runway)}`} style={{ fontSize: runway !== null && runway < 0 ? "48px" : "72px" }}>
+          {runway !== null ? (runway < 0 ? "Overdrawn" : Math.floor(runway)) : "—"}
         </p>
-        <p className="text-zinc-400 text-sm mt-1">days of expenses covered</p>
+        <p className="text-zinc-400 text-sm mt-1">
+          {runway !== null && runway < 0 ? "buffer balance is negative" : "days of expenses covered"}
+        </p>
         {runway !== null && (
           <p className={`mt-2 text-xs font-medium ${runwayColor(runway)}`}>
             {runwayLabel(runway)}
@@ -128,7 +131,9 @@ export default function ParentsDashboard() {
         )}
         <div className="mt-3 pt-3 border-t border-zinc-100 flex justify-center gap-4 text-xs text-zinc-400">
           <span>
-            Savings: <span className="text-zinc-700 font-medium">${totalBalance.toFixed(2)}</span>
+            Savings: <span className={`font-medium ${totalBalance < 0 ? "text-red-500" : "text-zinc-700"}`}>
+              {totalBalance < 0 ? "-$" : "$"}{Math.abs(totalBalance).toFixed(2)}
+            </span>
             <HelpTip explanation="Your shared buffer — money set aside to cover expenses during slow weeks." />
           </span>
           {totalBurn > 0 && (

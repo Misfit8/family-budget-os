@@ -19,6 +19,19 @@ export async function POST(req: NextRequest) {
     }
 
     const db = getDb();
+
+    // Block withdrawals that would overdraw the buffer
+    if (type === "withdrawal") {
+      const { total: currentBalance } = db
+        .prepare("SELECT COALESCE(SUM(amount), 0) as total FROM buffer WHERE user_id = ?")
+        .get(user_id) as { total: number };
+      if (currentBalance - Number(amount) < 0) {
+        return NextResponse.json({
+          error: `This withdrawal would overdraw the buffer. Current balance: $${currentBalance.toFixed(2)}`,
+        }, { status: 422 });
+      }
+    }
+
     // Store deposits as positive, withdrawals as negative
     const storedAmount = type === "withdrawal" ? -Math.abs(amount) : Math.abs(amount);
 

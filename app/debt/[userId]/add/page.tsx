@@ -66,8 +66,8 @@ export default function AddDebt() {
           </select>
         </Field>
 
-        <Field label="Current Balance ($)" required>
-          <input type="number" step="0.01" min="0" placeholder="0.00" value={form.balance}
+        <Field label="Current Balance ($) — negative if overdrawn" required>
+          <input type="number" step="0.01" placeholder="e.g. -234.50 or 1200.00" value={form.balance}
             onChange={(e) => update("balance", e.target.value)} className="input" required />
         </Field>
 

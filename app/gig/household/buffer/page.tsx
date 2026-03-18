@@ -67,7 +67,8 @@ export default function ParentsBufferPage() {
       setAmount(""); setNote("");
       load();
     } else {
-      setError("Failed to save.");
+      const data = await res.json().catch(() => ({}));
+      setError(data.error || "Failed to save.");
     }
   }
 
@@ -82,12 +83,15 @@ export default function ParentsBufferPage() {
       <div className="bg-white rounded-2xl border border-zinc-200 p-5 mb-4 flex justify-between items-center">
         <div>
           <p className="text-xs text-zinc-400 uppercase tracking-widest mb-1">Balance</p>
-          <p className="text-3xl font-bold text-zinc-800">${balance.toFixed(2)}</p>
+          <p className={`text-3xl font-bold ${balance < 0 ? "text-red-500" : "text-zinc-800"}`}>
+            {balance < 0 ? "-$" : "$"}{Math.abs(balance).toFixed(2)}
+          </p>
+          {balance < 0 && <p className="text-xs text-red-400 mt-0.5">Overdrawn</p>}
         </div>
         <div className="text-right">
           <p className="text-xs text-zinc-400 uppercase tracking-widest mb-1">Runway</p>
           <p className={`text-3xl font-bold ${runwayColor(runway)}`}>
-            {runway !== null ? `${Math.floor(runway)}d` : "—"}
+            {runway !== null ? (runway < 0 ? "—" : `${Math.floor(runway)}d`) : "—"}
           </p>
         </div>
       </div>

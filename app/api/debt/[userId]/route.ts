@@ -43,8 +43,8 @@ export async function POST(
   if (!name || typeof name !== "string" || name.trim().length === 0) {
     return NextResponse.json({ error: "name is required" }, { status: 400 });
   }
-  if (balance == null || Number(balance) < 0) {
-    return NextResponse.json({ error: "balance must be >= 0" }, { status: 400 });
+  if (balance == null || isNaN(Number(balance))) {
+    return NextResponse.json({ error: "balance is required" }, { status: 400 });
   }
   if (minimum_payment == null || Number(minimum_payment) < 0) {
     return NextResponse.json({ error: "minimum_payment must be >= 0" }, { status: 400 });
