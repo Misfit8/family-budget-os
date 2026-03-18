@@ -11,29 +11,36 @@ export default function AppleIcon() {
           width: 180,
           height: 180,
           background: "#16a34a",
-          borderRadius: 40,
+          borderRadius: 36,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          flexDirection: "column",
         }}
       >
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", position: "relative", width: 92, height: 98 }}>
           <div
             style={{
-              width: 0,
-              height: 0,
-              borderLeft: "32px solid transparent",
-              borderRight: "32px solid transparent",
-              borderBottom: "28px solid white",
+              width: 56,
+              height: 56,
+              background: "white",
+              transform: "rotate(45deg)",
+              borderRadius: 6,
+              position: "absolute",
+              top: 0,
+              left: "50%",
+              marginLeft: -28,
             }}
           />
           <div
             style={{
-              width: 56,
-              height: 42,
+              width: 70,
+              height: 56,
               background: "white",
-              borderRadius: "0 0 4px 4px",
+              borderRadius: "0 0 8px 8px",
+              position: "absolute",
+              bottom: 0,
+              left: "50%",
+              marginLeft: -35,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -41,7 +48,7 @@ export default function AppleIcon() {
           >
             <span
               style={{
-                fontSize: 26,
+                fontSize: 30,
                 fontWeight: 900,
                 color: "#16a34a",
                 lineHeight: 1,

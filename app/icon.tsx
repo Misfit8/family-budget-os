@@ -15,37 +15,43 @@ export default function Icon() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          flexDirection: "column",
         }}
       >
-        {/* House shape */}
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-          {/* Roof */}
-          <div
-            style={{
-              width: 0,
-              height: 0,
-              borderLeft: "90px solid transparent",
-              borderRight: "90px solid transparent",
-              borderBottom: "80px solid white",
-            }}
-          />
-          {/* House body */}
+        {/* House: rotated square as roof + rectangle body */}
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", position: "relative", width: 260, height: 280 }}>
+          {/* Roof — rotated square clipped to look like a triangle */}
           <div
             style={{
               width: 160,
-              height: 120,
+              height: 160,
               background: "white",
-              borderRadius: "0 0 8px 8px",
+              transform: "rotate(45deg)",
+              borderRadius: 12,
+              position: "absolute",
+              top: 0,
+              left: "50%",
+              marginLeft: -80,
+            }}
+          />
+          {/* Body */}
+          <div
+            style={{
+              width: 200,
+              height: 160,
+              background: "white",
+              borderRadius: "0 0 16px 16px",
+              position: "absolute",
+              bottom: 0,
+              left: "50%",
+              marginLeft: -100,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
             }}
           >
-            {/* Dollar sign */}
             <span
               style={{
-                fontSize: 72,
+                fontSize: 80,
                 fontWeight: 900,
                 color: "#16a34a",
                 lineHeight: 1,
