@@ -4,6 +4,8 @@ import Anthropic from "@anthropic-ai/sdk";
 
 const client = new Anthropic();
 
+const MIN_RUNS = 20;
+
 export async function POST(req: NextRequest) {
   try {
     const { user_id } = await req.json();
@@ -12,19 +14,30 @@ export async function POST(req: NextRequest) {
     const db = getDb();
     const uid = Number(user_id);
 
-    const eightWeeksAgo = new Date();
-    eightWeeksAgo.setDate(eightWeeksAgo.getDate() - 56);
-    const cutoff = eightWeeksAgo.toISOString().slice(0, 10);
+    const allRuns = db
+      .prepare("SELECT * FROM runs WHERE user_id = ? ORDER BY date ASC")
+      .all(uid) as {
+        id: number; date: string; hours: number; earnings_gross: number;
+        tips: number; miles: number; net: number; uber_fee: number;
+      }[];
 
-    const runs = db
-      .prepare("SELECT * FROM runs WHERE user_id = ? AND date >= ? ORDER BY date ASC")
-      .all(uid, cutoff);
-
-    if (runs.length === 0) {
-      return NextResponse.json({ analysis: "No runs logged in the last 8 weeks. Start logging to see patterns." });
+    // Not enough data
+    if (allRuns.length < MIN_RUNS) {
+      return NextResponse.json({
+        insufficient: true,
+        run_count: allRuns.length,
+        min_runs: MIN_RUNS,
+      });
     }
 
     const user = db.prepare("SELECT name FROM users WHERE id = ?").get(uid) as { name: string };
+
+    // Enrich runs with day of week
+    const enriched = allRuns.map((r) => ({
+      ...r,
+      day_of_week: new Date(r.date).toLocaleDateString("en-US", { weekday: "long" }),
+      effective_hourly: r.hours > 0 ? r.net / r.hours : null,
+    }));
 
     const message = await client.messages.create({
       model: "claude-sonnet-4-6",
@@ -32,25 +45,41 @@ export async function POST(req: NextRequest) {
       messages: [
         {
           role: "user",
-          content: `You are a calm, honest financial advisor analyzing gig work patterns for ${user?.name || "a gig worker"}.
+          content: `You are analyzing gig work patterns for ${user?.name ?? "a driver"}.
 
-Here are their Uber Eats runs from the last 8 weeks:
-${JSON.stringify(runs, null, 2)}
+Run history (${enriched.length} total runs):
+${JSON.stringify(enriched, null, 2)}
 
-Please analyze and provide:
-1. Best earning days of the week
-2. Best time windows (if hours data available)
-3. Weekly earnings floor (minimum they can reliably expect)
-4. Trend direction (improving, declining, or stable)
-5. One specific actionable recommendation
-
-Keep it brief, practical, and honest. No fluff. Format as clean paragraphs, not bullet lists.`,
+Return ONLY a JSON object:
+{
+  "best_days": [
+    { "day": "Saturday", "avg_hourly": 19.40, "hit_rate": 0.87, "note": "string" }
+  ],
+  "best_windows": [
+    { "label": "Fri/Sat dinner (6-9pm)", "avg_hourly": 21.20, "consistency": "high|medium|low" }
+  ],
+  "avoid": [
+    { "label": "Mon morning (8-11am)", "avg_hourly": 8.40, "note": "string" }
+  ],
+  "weekly_floor": number,
+  "weekly_target_plan": "string — how to hit their average weekly earnings",
+  "mileage_insight": "string",
+  "trend": "improving|stable|declining",
+  "trend_note": "string"
+}
+No preamble. No markdown. JSON only.`,
         },
       ],
     });
 
-    const analysis = message.content[0].type === "text" ? message.content[0].text : "";
-    return NextResponse.json({ analysis });
+    const text = message.content[0].type === "text" ? message.content[0].text.trim() : "";
+
+    try {
+      const analysis = JSON.parse(text);
+      return NextResponse.json({ analysis, run_count: allRuns.length });
+    } catch {
+      return NextResponse.json({ error: "Failed to parse analysis." }, { status: 422 });
+    }
   } catch (e) {
     console.error(e);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
