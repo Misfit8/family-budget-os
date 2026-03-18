@@ -33,7 +33,7 @@ export default function HelpTip({ explanation }: HelpTipProps) {
         ?
       </button>
       {open && (
-        <span className="absolute left-6 top-0 z-50 w-56 bg-white border border-zinc-200 rounded-xl shadow-lg px-3 py-2.5 text-xs text-zinc-600 leading-relaxed">
+        <span className="absolute right-0 top-full mt-1 z-50 w-56 bg-white border border-zinc-200 rounded-xl shadow-lg px-3 py-2.5 text-xs text-zinc-600 leading-relaxed sm:left-6 sm:top-0 sm:right-auto sm:mt-0">
           {explanation}
           <button
             onClick={() => setOpen(false)}
