@@ -3,9 +3,9 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import DigestCard from "@/app/components/DigestCard";
 import NotificationBanner from "@/app/components/NotificationBanner";
 import GoalsSection from "@/app/components/GoalsSection";
+import HelpTip from "@/app/components/HelpTip";
 
 interface W2Data {
   configured: boolean;
@@ -17,10 +17,10 @@ interface W2Data {
 }
 
 const FREQ_LABEL: Record<string, string> = {
-  weekly: "Weekly",
-  biweekly: "Every 2 weeks",
-  semimonthly: "Twice a month",
-  monthly: "Monthly",
+  weekly:      "Paid weekly",
+  biweekly:    "Paid every 2 weeks",
+  semimonthly: "Paid twice a month",
+  monthly:     "Paid monthly",
 };
 
 export default function W2Dashboard() {
@@ -28,7 +28,6 @@ export default function W2Dashboard() {
   const [data, setData] = useState<W2Data | null>(null);
   const [editing, setEditing] = useState(false);
 
-  // Form state
   const [netInput, setNetInput] = useState("");
   const [freqInput, setFreqInput] = useState("biweekly");
   const [nextPayInput, setNextPayInput] = useState("");
@@ -73,7 +72,6 @@ export default function W2Dashboard() {
     );
   }
 
-  // Payday progress bar: how far through the pay cycle are we?
   const freqDays = data.freq_days ?? 14;
   const daysToPayday = data.days_to_payday ?? 0;
   const daysElapsed = freqDays - daysToPayday;
@@ -85,61 +83,48 @@ export default function W2Dashboard() {
       <div className="flex items-center justify-between mb-6">
         <Link href="/" className="text-zinc-400 text-sm">← Home</Link>
         <h1 className="text-lg font-semibold text-zinc-800">Bro1</h1>
-        <span className="text-xs text-zinc-400 uppercase">W-2</span>
+        <Link href="/help" className="text-xs text-zinc-400 border border-zinc-200 rounded-lg px-2 py-1 hover:border-zinc-400">
+          Help ?
+        </Link>
       </div>
 
       {!editing && <NotificationBanner userId={userId} />}
-      {!editing && <DigestCard userId={userId} />}
 
       {editing ? (
         <form onSubmit={handleSave} className="bg-white rounded-2xl border border-zinc-200 p-5 flex flex-col gap-5">
-          <p className="text-xs text-zinc-400 uppercase tracking-widest">Pay Settings</p>
-
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-zinc-500 uppercase tracking-wide">Net Take-Home ($)</label>
-            <p className="text-xs text-zinc-400 mb-1">Your actual deposit after taxes and deductions.</p>
-            <input
-              type="number"
-              step="0.01"
-              min="0"
-              placeholder="0.00"
-              value={netInput}
-              onChange={(e) => setNetInput(e.target.value)}
-              className="input"
-              required
-            />
+          <div>
+            <p className="text-xs text-zinc-400 uppercase tracking-widest mb-1">Pay Settings</p>
+            <p className="text-sm text-zinc-500">Enter your paycheck details once and we'll track your pay schedule automatically.</p>
           </div>
 
           <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-zinc-500 uppercase tracking-wide">Pay Frequency</label>
-            <select
-              value={freqInput}
-              onChange={(e) => setFreqInput(e.target.value)}
-              className="input"
-            >
-              <option value="weekly">Weekly</option>
+            <div className="flex items-center gap-1">
+              <label className="text-xs font-medium text-zinc-500 uppercase tracking-wide">Take-Home Pay ($)</label>
+              <HelpTip explanation="The amount that actually deposits into your bank account after taxes, health insurance, and any other deductions are removed." />
+            </div>
+            <p className="text-xs text-zinc-400 mb-1">Your actual deposit — after all taxes and deductions.</p>
+            <input type="number" step="0.01" min="0" placeholder="0.00" value={netInput}
+              onChange={(e) => setNetInput(e.target.value)} className="input" required />
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-medium text-zinc-500 uppercase tracking-wide">How often are you paid?</label>
+            <select value={freqInput} onChange={(e) => setFreqInput(e.target.value)} className="input">
+              <option value="weekly">Every week</option>
               <option value="biweekly">Every 2 weeks (biweekly)</option>
               <option value="semimonthly">Twice a month (1st & 15th)</option>
-              <option value="monthly">Monthly</option>
+              <option value="monthly">Once a month</option>
             </select>
           </div>
 
           <div className="flex flex-col gap-1">
             <label className="text-xs font-medium text-zinc-500 uppercase tracking-wide">Next Payday</label>
-            <input
-              type="date"
-              value={nextPayInput}
-              onChange={(e) => setNextPayInput(e.target.value)}
-              className="input"
-              required
-            />
+            <input type="date" value={nextPayInput} onChange={(e) => setNextPayInput(e.target.value)}
+              className="input" required />
           </div>
 
-          <button
-            type="submit"
-            disabled={saving}
-            className="bg-zinc-800 text-white rounded-xl py-3 text-sm font-medium disabled:opacity-50"
-          >
+          <button type="submit" disabled={saving}
+            className="bg-zinc-800 text-white rounded-xl py-3 text-sm font-medium disabled:opacity-50">
             {saving ? "Saving…" : "Save Settings"}
           </button>
         </form>
@@ -151,61 +136,58 @@ export default function W2Dashboard() {
             <p className="font-bold text-zinc-800 leading-none" style={{ fontSize: "72px" }}>
               {daysToPayday}
             </p>
-            <p className="text-zinc-400 text-sm mt-1">days</p>
+            <p className="text-zinc-400 text-sm mt-1">days away</p>
             <p className="text-zinc-500 text-sm mt-2">{data.next_payday}</p>
           </div>
 
           {/* Pay cycle progress */}
           <div className="bg-white rounded-2xl border border-zinc-200 p-5 mb-4">
-            <p className="text-xs text-zinc-400 uppercase tracking-widest mb-3">Pay Cycle</p>
+            <div className="flex items-center gap-1 mb-3">
+              <p className="text-xs text-zinc-400 uppercase tracking-widest">Pay Cycle Progress</p>
+              <HelpTip explanation="Shows where you are in your current pay period. The bar fills as you get closer to payday. 100% = payday arrives." />
+            </div>
             <div className="h-2 bg-zinc-100 rounded-full overflow-hidden mb-2">
-              <div
-                className="h-full bg-emerald-500 rounded-full transition-all"
-                style={{ width: `${cyclePct}%` }}
-              />
+              <div className="h-full bg-emerald-500 rounded-full transition-all" style={{ width: `${cyclePct}%` }} />
             </div>
             <div className="flex justify-between text-xs text-zinc-400">
               <span>Last payday</span>
-              <span>{daysToPayday}d left</span>
+              <span>{daysToPayday}d until next deposit</span>
             </div>
           </div>
 
           {/* Take-home */}
           <div className="bg-white rounded-2xl border border-zinc-200 p-5 mb-6">
-            <p className="text-xs text-zinc-400 uppercase tracking-widest mb-1">Expected Deposit</p>
+            <div className="flex items-center gap-1 mb-1">
+              <p className="text-xs text-zinc-400 uppercase tracking-widest">Expected Deposit</p>
+              <HelpTip explanation="Your take-home pay — the amount that will hit your bank account after all taxes and deductions." />
+            </div>
             <p className="text-3xl font-bold text-zinc-800">${data.net_take_home?.toFixed(2)}</p>
             <p className="text-xs text-zinc-400 mt-1">{FREQ_LABEL[data.pay_frequency ?? ""] ?? data.pay_frequency}</p>
           </div>
 
-          <button
-            onClick={() => setEditing(true)}
-            className="w-full border border-zinc-200 text-zinc-600 rounded-xl py-3 text-sm font-medium hover:border-zinc-400 transition-colors"
-          >
-            Edit Pay Settings
-          </button>
-
-          <Link
-            href={`/debt/${userId}`}
-            className="block w-full mb-2 border border-zinc-200 text-zinc-600 rounded-xl py-3 text-center text-sm font-medium hover:border-zinc-400 transition-colors"
-          >
-            Debt Freedom
-          </Link>
+          {/* Actions */}
+          <div className="grid grid-cols-2 gap-3 mb-2">
+            <button onClick={() => setEditing(true)}
+              className="col-span-2 border border-zinc-200 text-zinc-600 rounded-xl py-3 text-sm font-medium hover:border-zinc-400 transition-colors">
+              Edit Pay Settings
+            </button>
+            <Link href={`/digest/${userId}`}
+              className="bg-white border border-zinc-200 text-zinc-700 rounded-xl py-3 text-center text-sm font-medium hover:border-zinc-400 transition-colors">
+              Weekly Digest ✦
+            </Link>
+            <Link href={`/debt/${userId}`}
+              className="bg-white border border-zinc-200 text-zinc-700 rounded-xl py-3 text-center text-sm font-medium hover:border-zinc-400 transition-colors">
+              Debt Freedom
+            </Link>
+          </div>
 
           <GoalsSection userId={userId} incomeType="w2" />
         </>
       )}
 
       <style>{`
-        .input {
-          border: 1px solid #e4e4e7;
-          border-radius: 8px;
-          padding: 10px 12px;
-          font-size: 16px;
-          background: white;
-          color: #18181b;
-          outline: none;
-          width: 100%;
-        }
+        .input { border: 1px solid #e4e4e7; border-radius: 8px; padding: 10px 12px;
+          font-size: 16px; background: white; color: #18181b; outline: none; width: 100%; }
         .input:focus { border-color: #a1a1aa; }
       `}</style>
     </div>
