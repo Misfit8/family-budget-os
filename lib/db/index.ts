@@ -90,6 +90,15 @@ function initSchema(db: Database.Database) {
 
   // Migrations
   try { db.exec("ALTER TABLE runs ADD COLUMN note TEXT"); } catch { /* already exists */ }
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS digests (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      content TEXT NOT NULL,
+      generated_at TEXT DEFAULT (datetime('now')),
+      dismissed INTEGER DEFAULT 0
+    );
+  `);
 
   // Seed family members if not already seeded
   const count = (db.prepare("SELECT COUNT(*) as c FROM users").get() as { c: number }).c;

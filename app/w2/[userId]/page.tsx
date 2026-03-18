@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import DigestCard from "@/app/components/DigestCard";
 
 interface W2Data {
   configured: boolean;
@@ -84,6 +85,8 @@ export default function W2Dashboard() {
         <h1 className="text-lg font-semibold text-zinc-800">Bro1</h1>
         <span className="text-xs text-zinc-400 uppercase">W-2</span>
       </div>
+
+      {!editing && <DigestCard userId={userId} />}
 
       {editing ? (
         <form onSubmit={handleSave} className="bg-white rounded-2xl border border-zinc-200 p-5 flex flex-col gap-5">
