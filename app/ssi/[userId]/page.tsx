@@ -136,6 +136,13 @@ export default function SSIDashboard() {
         Update Assets
       </Link>
 
+      <Link
+        href={`/debt/${userId}`}
+        className="block w-full mt-3 border border-zinc-200 text-zinc-600 rounded-xl py-3 text-center text-sm font-medium hover:border-zinc-400 transition-colors"
+      >
+        Debt Freedom
+      </Link>
+
       <GoalsSection userId={userId} incomeType="ssi" />
     </div>
   );

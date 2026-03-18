@@ -184,6 +184,13 @@ export default function W2Dashboard() {
             Edit Pay Settings
           </button>
 
+          <Link
+            href={`/debt/${userId}`}
+            className="block w-full mb-2 border border-zinc-200 text-zinc-600 rounded-xl py-3 text-center text-sm font-medium hover:border-zinc-400 transition-colors"
+          >
+            Debt Freedom
+          </Link>
+
           <GoalsSection userId={userId} incomeType="w2" />
         </>
       )}

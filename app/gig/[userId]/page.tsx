@@ -192,9 +192,15 @@ export default function GigDashboard() {
         </Link>
         <Link
           href={`/gig/${userId}/patterns`}
-          className="col-span-2 bg-white border border-zinc-200 text-zinc-700 rounded-xl py-3 text-center text-sm font-medium hover:border-zinc-400 transition-colors"
+          className="bg-white border border-zinc-200 text-zinc-700 rounded-xl py-3 text-center text-sm font-medium hover:border-zinc-400 transition-colors"
         >
           Patterns ✦
+        </Link>
+        <Link
+          href={`/debt/${userId}`}
+          className="bg-white border border-zinc-200 text-zinc-700 rounded-xl py-3 text-center text-sm font-medium hover:border-zinc-400 transition-colors"
+        >
+          Debt Freedom
         </Link>
       </div>
 

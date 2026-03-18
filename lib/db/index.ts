@@ -159,6 +159,34 @@ function initSchema(db: Database.Database) {
     "goal_contributions", "notifications", "digests",
   ].forEach(addHouseholdId);
 
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS debts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      household_id INTEGER NOT NULL DEFAULT 1,
+      user_id INTEGER NOT NULL,
+      name TEXT NOT NULL,
+      balance REAL NOT NULL,
+      original_balance REAL NOT NULL,
+      minimum_payment REAL NOT NULL DEFAULT 0,
+      interest_rate REAL NOT NULL DEFAULT 0,
+      debt_type TEXT DEFAULT 'other',
+      is_shared INTEGER DEFAULT 0,
+      created_at TEXT DEFAULT (datetime('now')),
+      paid_off_at TEXT
+    );
+    CREATE TABLE IF NOT EXISTS debt_payments (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      household_id INTEGER NOT NULL DEFAULT 1,
+      debt_id INTEGER NOT NULL,
+      user_id INTEGER NOT NULL,
+      amount REAL NOT NULL,
+      date TEXT NOT NULL,
+      payment_type TEXT DEFAULT 'minimum',
+      note TEXT,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+  `);
+
   // Other migrations
   try { db.exec("ALTER TABLE runs ADD COLUMN note TEXT"); } catch { /* already exists */ }
 
