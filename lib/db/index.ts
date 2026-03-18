@@ -1,4 +1,4 @@
-﻿import Database from "better-sqlite3";
+import Database from "better-sqlite3";
 import path from "path";
 import fs from "fs";
 
@@ -18,8 +18,15 @@ export function getDb(): Database.Database {
 
 function initSchema(db: Database.Database) {
   db.exec(`
+    CREATE TABLE IF NOT EXISTS households (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+
     CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY,
+      household_id INTEGER NOT NULL DEFAULT 1,
       name TEXT NOT NULL,
       role TEXT DEFAULT 'member',
       income_type TEXT NOT NULL,
@@ -28,6 +35,7 @@ function initSchema(db: Database.Database) {
     );
     CREATE TABLE IF NOT EXISTS runs (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
+      household_id INTEGER NOT NULL DEFAULT 1,
       user_id INTEGER NOT NULL,
       date TEXT NOT NULL,
       hours REAL,
@@ -42,6 +50,7 @@ function initSchema(db: Database.Database) {
     );
     CREATE TABLE IF NOT EXISTS buffer (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
+      household_id INTEGER NOT NULL DEFAULT 1,
       user_id INTEGER NOT NULL,
       date TEXT NOT NULL,
       amount REAL NOT NULL,
@@ -51,6 +60,7 @@ function initSchema(db: Database.Database) {
     );
     CREATE TABLE IF NOT EXISTS shared_bills (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
+      household_id INTEGER NOT NULL DEFAULT 1,
       name TEXT NOT NULL,
       amount REAL NOT NULL,
       due_date TEXT,
@@ -60,12 +70,14 @@ function initSchema(db: Database.Database) {
     );
     CREATE TABLE IF NOT EXISTS weekly_salary_settings (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
+      household_id INTEGER NOT NULL DEFAULT 1,
       user_id INTEGER NOT NULL,
       target_amount REAL NOT NULL,
       updated_at TEXT DEFAULT (datetime('now'))
     );
     CREATE TABLE IF NOT EXISTS tax_tracker (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
+      household_id INTEGER NOT NULL DEFAULT 1,
       user_id INTEGER NOT NULL,
       year INTEGER NOT NULL,
       set_aside REAL DEFAULT 0,
@@ -73,6 +85,7 @@ function initSchema(db: Database.Database) {
     );
     CREATE TABLE IF NOT EXISTS ssi_assets (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
+      household_id INTEGER NOT NULL DEFAULT 1,
       user_id INTEGER NOT NULL,
       countable_assets REAL DEFAULT 0,
       able_account REAL DEFAULT 0,
@@ -80,19 +93,16 @@ function initSchema(db: Database.Database) {
     );
     CREATE TABLE IF NOT EXISTS w2_settings (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
+      household_id INTEGER NOT NULL DEFAULT 1,
       user_id INTEGER NOT NULL,
       net_take_home REAL NOT NULL,
       pay_frequency TEXT NOT NULL,
       next_payday TEXT,
       updated_at TEXT DEFAULT (datetime('now'))
     );
-  `);
-
-  // Migrations
-  try { db.exec("ALTER TABLE runs ADD COLUMN note TEXT"); } catch { /* already exists */ }
-  db.exec(`
     CREATE TABLE IF NOT EXISTS savings_goals (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
+      household_id INTEGER NOT NULL DEFAULT 1,
       user_id INTEGER NOT NULL,
       name TEXT NOT NULL,
       target_amount REAL NOT NULL,
@@ -107,6 +117,7 @@ function initSchema(db: Database.Database) {
     );
     CREATE TABLE IF NOT EXISTS goal_contributions (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
+      household_id INTEGER NOT NULL DEFAULT 1,
       goal_id INTEGER NOT NULL,
       user_id INTEGER NOT NULL,
       amount REAL NOT NULL,
@@ -116,6 +127,7 @@ function initSchema(db: Database.Database) {
     );
     CREATE TABLE IF NOT EXISTS notifications (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
+      household_id INTEGER NOT NULL DEFAULT 1,
       user_id INTEGER NOT NULL,
       type TEXT NOT NULL,
       title TEXT NOT NULL,
@@ -126,6 +138,7 @@ function initSchema(db: Database.Database) {
     );
     CREATE TABLE IF NOT EXISTS digests (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
+      household_id INTEGER NOT NULL DEFAULT 1,
       user_id INTEGER NOT NULL,
       content TEXT NOT NULL,
       generated_at TEXT DEFAULT (datetime('now')),
@@ -133,11 +146,33 @@ function initSchema(db: Database.Database) {
     );
   `);
 
+  // Migrations — add household_id to all existing tables
+  const addHouseholdId = (table: string) => {
+    try {
+      db.exec(`ALTER TABLE ${table} ADD COLUMN household_id INTEGER NOT NULL DEFAULT 1`);
+    } catch { /* column already exists */ }
+  };
+
+  [
+    "users", "runs", "buffer", "shared_bills", "weekly_salary_settings",
+    "tax_tracker", "ssi_assets", "w2_settings", "savings_goals",
+    "goal_contributions", "notifications", "digests",
+  ].forEach(addHouseholdId);
+
+  // Other migrations
+  try { db.exec("ALTER TABLE runs ADD COLUMN note TEXT"); } catch { /* already exists */ }
+
+  // Seed default household
+  const hCount = (db.prepare("SELECT COUNT(*) as c FROM households").get() as { c: number }).c;
+  if (hCount === 0) {
+    db.prepare("INSERT INTO households (id, name) VALUES (1, 'Home')").run();
+  }
+
   // Seed family members if not already seeded
   const count = (db.prepare("SELECT COUNT(*) as c FROM users").get() as { c: number }).c;
   if (count === 0) {
     const insert = db.prepare(
-      "INSERT INTO users (id, name, income_type) VALUES (?, ?, ?)"
+      "INSERT INTO users (id, household_id, name, income_type) VALUES (?, 1, ?, ?)"
     );
     const seedMany = db.transaction(() => {
       insert.run(1, "Mom", "gig");
