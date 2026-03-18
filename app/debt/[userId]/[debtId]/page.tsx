@@ -81,7 +81,7 @@ export default function DebtDetail() {
       <div className="flex items-center justify-between mb-6">
         <Link href={`/debt/${userId}`} className="text-zinc-400 text-sm">← Back</Link>
         <h1 className="text-lg font-semibold text-zinc-800 truncate mx-2">{debt.name}</h1>
-        <button onClick={handleDelete} className="text-zinc-300 hover:text-red-400 text-xs">Delete</button>
+        <button onClick={handleDelete} className="text-zinc-300 hover:text-red-400 text-sm py-1 px-2">Delete</button>
       </div>
 
       {/* Balance card */}

@@ -137,17 +137,21 @@ export default function HubPage() {
 
       {/* Bills summary bar */}
       {data.totalBills > 0 && (
-        <div className="bg-white rounded-xl border border-zinc-200 px-4 py-3 mb-3 flex justify-between text-sm">
-          <span className="text-zinc-500">Total</span>
-          <span className="text-zinc-800 font-medium">${data.totalBills.toFixed(2)}</span>
-          <span className="text-zinc-400">·</span>
-          <span className="text-zinc-500">Paid</span>
-          <span className="text-emerald-600 font-medium">${data.paidBills.toFixed(2)}</span>
-          <span className="text-zinc-400">·</span>
-          <span className="text-zinc-500">Left</span>
-          <span className={`font-medium ${unpaidTotal > 0 ? "text-amber-600" : "text-emerald-600"}`}>
-            ${unpaidTotal.toFixed(2)}
-          </span>
+        <div className="bg-white rounded-xl border border-zinc-200 px-4 py-3 mb-3 grid grid-cols-3 text-sm text-center">
+          <div>
+            <p className="text-zinc-400 text-xs">Total</p>
+            <p className="text-zinc-800 font-medium">${data.totalBills.toFixed(2)}</p>
+          </div>
+          <div>
+            <p className="text-zinc-400 text-xs">Paid</p>
+            <p className="text-emerald-600 font-medium">${data.paidBills.toFixed(2)}</p>
+          </div>
+          <div>
+            <p className="text-zinc-400 text-xs">Left</p>
+            <p className={`font-medium ${unpaidTotal > 0 ? "text-amber-600" : "text-emerald-600"}`}>
+              ${unpaidTotal.toFixed(2)}
+            </p>
+          </div>
         </div>
       )}
 
@@ -221,7 +225,7 @@ export default function HubPage() {
               </p>
               <button
                 onClick={() => deleteBill(bill.id)}
-                className="text-zinc-300 hover:text-red-400 text-xs flex-shrink-0"
+                className="text-zinc-300 hover:text-red-400 flex-shrink-0 p-1"
               >
                 ✕
               </button>
