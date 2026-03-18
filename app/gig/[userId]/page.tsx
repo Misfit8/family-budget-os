@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import DigestCard from "@/app/components/DigestCard";
+import NotificationBanner from "@/app/components/NotificationBanner";
 
 interface BufferData {
   balance: number;
@@ -96,6 +97,9 @@ export default function GigDashboard() {
         <h1 className="text-lg font-semibold text-zinc-800">{NAMES[userId] ?? "Gig Worker"}</h1>
         <span className="text-xs text-zinc-400 uppercase">Gig</span>
       </div>
+
+      {/* Notifications */}
+      <NotificationBanner userId={userId} />
 
       {/* Weekly Digest */}
       <DigestCard userId={userId} />

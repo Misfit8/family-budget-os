@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import DigestCard from "@/app/components/DigestCard";
+import NotificationBanner from "@/app/components/NotificationBanner";
 
 interface SSIData {
   countable_assets: number;
@@ -67,6 +68,9 @@ export default function SSIDashboard() {
         <h1 className="text-lg font-semibold text-zinc-800">Braddon</h1>
         <span className="text-xs text-zinc-400 uppercase">SSI</span>
       </div>
+
+      {/* Notifications */}
+      <NotificationBanner userId={userId} />
 
       {/* Weekly Digest */}
       <DigestCard userId={userId} />

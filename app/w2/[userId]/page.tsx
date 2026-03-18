@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import DigestCard from "@/app/components/DigestCard";
+import NotificationBanner from "@/app/components/NotificationBanner";
 
 interface W2Data {
   configured: boolean;
@@ -86,6 +87,7 @@ export default function W2Dashboard() {
         <span className="text-xs text-zinc-400 uppercase">W-2</span>
       </div>
 
+      {!editing && <NotificationBanner userId={userId} />}
       {!editing && <DigestCard userId={userId} />}
 
       {editing ? (
