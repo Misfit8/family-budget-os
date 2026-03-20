@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import HelpTip from "@/app/components/HelpTip";
 
 interface GigMember {
   id: number; name: string; income_type: "gig";
@@ -106,7 +107,10 @@ export default function HubPage() {
 
       {/* Household Runway */}
       <div className="bg-white rounded-2xl border border-zinc-200 p-6 mb-4 text-center">
-        <p className="text-xs text-zinc-400 uppercase tracking-widest mb-2">Household Runway</p>
+        <div className="flex items-center justify-center gap-1 mb-2">
+          <p className="text-xs text-zinc-400 uppercase tracking-widest">Household Runway</p>
+          <HelpTip explanation="How many days the household's savings (buffer) can cover expenses. Based on the lowest individual gig worker runway. Green = 14+ days. Yellow = 7–14 days. Red = under 7 days." />
+        </div>
         <p className={`font-bold leading-none ${runwayColor(data.householdRunway)}`} style={{ fontSize: "72px" }}>
           {data.householdRunway !== null ? Math.floor(data.householdRunway) : "—"}
         </p>
@@ -123,15 +127,19 @@ export default function HubPage() {
       </div>
 
       {/* Shared Bills */}
-      <div className="flex items-center justify-between mb-3">
-        <p className="text-xs text-zinc-400 uppercase tracking-widest">Shared Bills</p>
+      <div className="flex items-center justify-between mb-1">
+        <div className="flex items-center gap-1">
+          <p className="text-xs text-zinc-400 uppercase tracking-widest">Shared Bills</p>
+          <HelpTip explanation="Bills the household shares — rent, utilities, subscriptions, etc. Add a bill, set a due date, then tap the circle to mark it paid when it's been taken care of. Resets each month." />
+        </div>
         <button
           onClick={() => setShowAddBill(!showAddBill)}
           className="text-xs text-zinc-500 border border-zinc-200 rounded-lg px-3 py-1 hover:border-zinc-400"
         >
-          {showAddBill ? "Cancel" : "+ Add"}
+          {showAddBill ? "Cancel" : "+ Add Bill"}
         </button>
       </div>
+      <p className="text-xs text-zinc-400 mb-3">Rent, utilities, subscriptions — bills everyone shares.</p>
 
       {/* Bills summary bar */}
       {data.totalBills > 0 && (
@@ -158,29 +166,35 @@ export default function HubPage() {
         <form onSubmit={addBill} className="bg-white rounded-2xl border border-zinc-200 p-4 mb-3 flex flex-col gap-3">
           <input
             type="text"
-            placeholder="Bill name (e.g. Rent)"
+            placeholder="Bill name (e.g. Rent, Electric, Netflix)"
             value={billName}
             onChange={(e) => setBillName(e.target.value)}
             className="input"
             required
           />
           <div className="flex gap-2">
-            <input
-              type="number"
-              step="0.01"
-              min="0"
-              placeholder="Amount"
-              value={billAmount}
-              onChange={(e) => setBillAmount(e.target.value)}
-              className="input flex-1"
-              required
-            />
-            <input
-              type="date"
-              value={billDue}
-              onChange={(e) => setBillDue(e.target.value)}
-              className="input flex-1"
-            />
+            <div className="flex-1 flex flex-col gap-1">
+              <label className="text-xs text-zinc-400">Amount ($)</label>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                placeholder="0.00"
+                value={billAmount}
+                onChange={(e) => setBillAmount(e.target.value)}
+                className="input"
+                required
+              />
+            </div>
+            <div className="flex-1 flex flex-col gap-1">
+              <label className="text-xs text-zinc-400">Due date (optional)</label>
+              <input
+                type="date"
+                value={billDue}
+                onChange={(e) => setBillDue(e.target.value)}
+                className="input"
+              />
+            </div>
           </div>
           <button
             type="submit"
@@ -194,42 +208,50 @@ export default function HubPage() {
 
       {/* Bills list */}
       {data.bills.length === 0 ? (
-        <p className="text-zinc-400 text-sm">No bills this month. Add one above.</p>
-      ) : (
-        <div className="flex flex-col gap-2">
-          {data.bills.map((bill) => (
-            <div
-              key={bill.id}
-              className={`bg-white rounded-xl border px-4 py-3 flex items-center gap-3 ${
-                bill.paid ? "border-emerald-100 opacity-60" : "border-zinc-200"
-              }`}
-            >
-              <button
-                onClick={() => togglePaid(bill)}
-                className={`w-5 h-5 rounded-full border-2 flex-shrink-0 transition-colors ${
-                  bill.paid ? "bg-emerald-500 border-emerald-500" : "border-zinc-300"
-                }`}
-              />
-              <div className="flex-1 min-w-0">
-                <p className={`text-sm font-medium truncate ${bill.paid ? "line-through text-zinc-400" : "text-zinc-800"}`}>
-                  {bill.name}
-                </p>
-                {bill.due_date && (
-                  <p className="text-xs text-zinc-400">Due {bill.due_date}</p>
-                )}
-              </div>
-              <p className="text-sm font-semibold text-zinc-700 flex-shrink-0">
-                ${bill.amount.toFixed(2)}
-              </p>
-              <button
-                onClick={() => deleteBill(bill.id)}
-                className="text-zinc-300 hover:text-red-400 flex-shrink-0 p-1"
-              >
-                ✕
-              </button>
-            </div>
-          ))}
+        <div className="bg-white rounded-xl border border-zinc-200 p-5 text-center">
+          <p className="text-zinc-500 text-sm mb-1">No bills added yet.</p>
+          <p className="text-xs text-zinc-400">Tap "+ Add Bill" above to add rent, utilities, or any shared expense.</p>
         </div>
+      ) : (
+        <>
+          <p className="text-xs text-zinc-400 mb-2">Tap the circle on any bill to mark it paid.</p>
+          <div className="flex flex-col gap-2">
+            {data.bills.map((bill) => (
+              <div
+                key={bill.id}
+                className={`bg-white rounded-xl border px-4 py-3 flex items-center gap-3 ${
+                  bill.paid ? "border-emerald-100 opacity-60" : "border-zinc-200"
+                }`}
+              >
+                <button
+                  onClick={() => togglePaid(bill)}
+                  title={bill.paid ? "Mark unpaid" : "Mark as paid"}
+                  className={`w-5 h-5 rounded-full border-2 flex-shrink-0 transition-colors ${
+                    bill.paid ? "bg-emerald-500 border-emerald-500" : "border-zinc-300 hover:border-zinc-500"
+                  }`}
+                />
+                <div className="flex-1 min-w-0">
+                  <p className={`text-sm font-medium truncate ${bill.paid ? "line-through text-zinc-400" : "text-zinc-800"}`}>
+                    {bill.name}
+                  </p>
+                  <p className="text-xs text-zinc-400">
+                    {bill.paid ? "✓ Paid" : bill.due_date ? `Due ${bill.due_date}` : "No due date"}
+                  </p>
+                </div>
+                <p className="text-sm font-semibold text-zinc-700 flex-shrink-0">
+                  ${bill.amount.toFixed(2)}
+                </p>
+                <button
+                  onClick={() => deleteBill(bill.id)}
+                  title="Remove bill"
+                  className="text-zinc-300 hover:text-red-400 flex-shrink-0 p-1"
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
+          </div>
+        </>
       )}
 
       <style>{`
@@ -259,7 +281,12 @@ function MemberCard({ member }: { member: Member }) {
     <Link href={href} className="bg-white rounded-xl border border-zinc-200 px-4 py-3 flex items-center justify-between hover:border-zinc-400 transition-colors">
       <div>
         <p className="text-sm font-semibold text-zinc-800">{member.name}</p>
-        <p className="text-xs text-zinc-400 uppercase">{member.income_type}</p>
+        <p className="text-xs text-zinc-400">
+          {member.income_type === "gig" ? "Gig delivery" :
+           member.income_type === "w2" ? "W-2 employee" :
+           member.income_type === "ssi" ? "SSI recipient" :
+           "Not set up"}
+        </p>
       </div>
       <MemberStat member={member} />
     </Link>

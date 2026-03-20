@@ -146,6 +146,41 @@ const SECTIONS: { title: string; items: FAQItem[] }[] = [
     ],
   },
   {
+    title: "Shared Bills",
+    items: [
+      {
+        term: "Shared bills",
+        short: "Household expenses everyone splits — rent, utilities, subscriptions.",
+        long: "Bills added in the Family Hub are shared household bills. Add a name, the amount owed, and an optional due date. Tap the circle next to a bill to mark it paid. The summary bar shows total owed, what's been paid, and what's left for the month.",
+      },
+      {
+        term: "Mark as paid",
+        short: "Tap the circle on a bill to record it as paid.",
+        long: "Tapping the circle next to a bill marks it as paid. The bill fades out and a checkmark appears. Tap it again to undo. This is just a tracking tool — it doesn't actually send money anywhere.",
+      },
+      {
+        term: "Bills Left (the 'Left' column)",
+        short: "How much of the shared bills still needs to be paid this month.",
+        long: "Total bills minus what's already been marked paid. This updates immediately when you mark bills as paid.",
+      },
+    ],
+  },
+  {
+    title: "Family Hub",
+    items: [
+      {
+        term: "Household Runway",
+        short: "How many days the household's savings can cover expenses.",
+        long: "Based on the lowest individual gig worker runway in the household. If one person's buffer runs out in 5 days and another's lasts 20, the household runway shows 5 — the weakest link. Green = 14+ days. Yellow = 7–14 days. Red = under 7 days.",
+      },
+      {
+        term: "Member cards",
+        short: "Each family member's income type and current status at a glance.",
+        long: "Tap any member card to go to their personal dashboard. Gig workers show runway and weekly earnings. W-2 employees show their take-home and next payday. SSI recipients show countable assets vs. the $2,000 limit.",
+      },
+    ],
+  },
+  {
     title: "Weekly Digest",
     items: [
       {
