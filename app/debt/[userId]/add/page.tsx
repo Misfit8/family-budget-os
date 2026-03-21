@@ -43,6 +43,8 @@ export default function AddDebt() {
     else setError("Failed to save.");
   }
 
+  const isPastDue = form.debt_type === "past_due_bill";
+
   return (
     <div className="min-h-screen bg-zinc-50 px-4 py-8 max-w-md mx-auto">
       <div className="flex items-center gap-3 mb-6">
@@ -50,41 +52,72 @@ export default function AddDebt() {
         <h1 className="text-lg font-semibold text-zinc-800">Add Debt</h1>
       </div>
 
+      {/* Contextual hint for past-due bills */}
+      {isPastDue && (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 mb-4">
+          <p className="text-sm font-medium text-amber-800 mb-1">Behind on a bill?</p>
+          <p className="text-xs text-amber-700 leading-relaxed">
+            Enter the <strong>total amount you&apos;re behind</strong> as the balance — not the monthly bill amount.
+            For example, if rent is $900/mo and you&apos;re 2 months behind, enter $1,800.
+            Set the minimum payment to what they&apos;ll accept each month to catch up.
+            Interest rate is usually 0% for utility and rent arrears.
+          </p>
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="bg-white rounded-2xl border border-zinc-200 p-5 flex flex-col gap-4">
-        <Field label="Name" required>
-          <input type="text" placeholder="e.g. Chase Sapphire" value={form.name}
+        <Field label="What is this debt?" hint="e.g. Chase Sapphire, Electric Bill - Arrears, Medical Bill" required>
+          <input type="text" placeholder="Name this debt" value={form.name}
             onChange={(e) => update("name", e.target.value)} className="input" required />
         </Field>
 
-        <Field label="Type">
+        <Field label="Type" hint="Pick the closest category — helps with tracking and advice">
           <select value={form.debt_type} onChange={(e) => update("debt_type", e.target.value)} className="input">
-            <option value="credit_card">Credit Card</option>
-            <option value="loan">Personal Loan</option>
-            <option value="medical">Medical</option>
-            <option value="student">Student Loan</option>
-            <option value="other">Other</option>
+            <option value="credit_card">💳  Credit Card</option>
+            <option value="loan">🏦  Personal / Auto Loan</option>
+            <option value="medical">🏥  Medical Bill</option>
+            <option value="student">🎓  Student Loan</option>
+            <option value="past_due_bill">⚠️  Past-due Bill (behind on rent, utilities, etc.)</option>
+            <option value="other">📋  Other</option>
           </select>
         </Field>
 
-        <Field label="Current Balance ($) — negative if overdrawn" required>
-          <input type="number" step="0.01" placeholder="e.g. -234.50 or 1200.00" value={form.balance}
+        <Field
+          label="Total amount owed right now ($)"
+          hint={isPastDue
+            ? "The total back-payments owed — not the monthly amount"
+            : "The current balance on your statement or account"}
+          required
+        >
+          <input type="number" step="0.01" min="0" placeholder="0.00" value={form.balance}
             onChange={(e) => update("balance", e.target.value)} className="input" required />
         </Field>
 
-        <Field label="Minimum Payment ($/mo)" required>
+        <Field
+          label="Minimum monthly payment ($)"
+          hint={isPastDue
+            ? "The least amount they&apos;ll accept each month while you&apos;re catching up"
+            : "The minimum required to keep the account in good standing"}
+          required
+        >
           <input type="number" step="0.01" min="0" placeholder="0.00" value={form.minimum_payment}
             onChange={(e) => update("minimum_payment", e.target.value)} className="input" required />
         </Field>
 
-        <Field label="Interest Rate (%)">
-          <input type="number" step="0.01" min="0" max="100" placeholder="0.00" value={form.interest_rate}
+        <Field
+          label="Interest rate (%)"
+          hint={isPastDue ? "Usually 0% for past-due bills — leave blank if unsure" : "Annual percentage rate (APR) — found on your statement"}
+        >
+          <input type="number" step="0.01" min="0" max="100"
+            placeholder={isPastDue ? "0 (most past-due bills have no interest)" : "e.g. 19.99"}
+            value={form.interest_rate}
             onChange={(e) => update("interest_rate", e.target.value)} className="input" />
         </Field>
 
         <label className="flex items-center gap-2 text-sm text-zinc-600 cursor-pointer">
           <input type="checkbox" checked={form.is_shared}
             onChange={(e) => update("is_shared", e.target.checked)} />
-          Shared household debt
+          <span>Shared household debt <span className="text-zinc-400">(affects the whole family)</span></span>
         </label>
 
         {error && <p className="text-red-500 text-sm">{error}</p>}
@@ -104,12 +137,15 @@ export default function AddDebt() {
   );
 }
 
-function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
+function Field({ label, hint, required, children }: {
+  label: string; hint?: string; required?: boolean; children: React.ReactNode;
+}) {
   return (
     <div className="flex flex-col gap-1">
       <label className="text-xs font-medium text-zinc-500 uppercase tracking-wide">
         {label} {required && <span className="text-red-400">*</span>}
       </label>
+      {hint && <p className="text-xs text-zinc-400 -mt-0.5">{hint}</p>}
       {children}
     </div>
   );

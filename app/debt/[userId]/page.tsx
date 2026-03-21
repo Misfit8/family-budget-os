@@ -19,7 +19,7 @@ interface Insight {
 }
 
 const DEBT_TYPE_EMOJI: Record<string, string> = {
-  credit_card: "💳", loan: "🏦", medical: "🏥", student: "🎓", other: "📋",
+  credit_card: "💳", loan: "🏦", medical: "🏥", student: "🎓", past_due_bill: "⚠️", other: "📋",
 };
 
 const NAMES: Record<string, string> = { "1": "Mom", "2": "Dad", "3": "Braddon", "4": "Bro1", "5": "Bro2" };

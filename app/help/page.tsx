@@ -128,6 +128,16 @@ const SECTIONS: { title: string; items: FAQItem[] }[] = [
         short: "The least you must pay each month to stay current.",
         long: "The minimum required payment to avoid late fees and keep your account in good standing. Paying only minimums on high-interest debt means most of your payment goes to interest, not principal.",
       },
+      {
+        term: "Past-due bill / Arrears",
+        short: "A bill you're behind on — rent, utilities, etc.",
+        long: "If you've missed payments on rent, electricity, gas, or any regular bill, you're in arrears. To track it: add a new debt, choose 'Past-due Bill' as the type, and enter the total amount you're behind (not the monthly amount). For example, if you're 2 months behind on a $900/mo rent, enter $1,800. Set the minimum payment to whatever the landlord or company will accept each month while you catch up.",
+      },
+      {
+        term: "Log Payment vs. Correct the Balance",
+        short: "Two ways to update a debt — which one to use.",
+        long: "'I Made a Payment' is for when you actually paid money — it subtracts what you paid from the balance. 'Correct the Balance' is for when your statement shows a different number than what the app shows — you just type in the correct amount directly. Use 'Correct the Balance' when interest has been added or you want to sync with your actual account.",
+      },
     ],
   },
   {

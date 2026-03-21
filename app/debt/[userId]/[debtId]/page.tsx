@@ -12,6 +12,12 @@ interface Payment {
   id: number; amount: number; date: string; payment_type: string; note: string;
 }
 
+const PAYMENT_TYPE_LABELS: Record<string, { label: string; hint: string }> = {
+  minimum:  { label: "Minimum payment",  hint: "The required monthly minimum to stay current" },
+  extra:    { label: "Extra payment",    hint: "Paying more than the minimum to pay down faster" },
+  lump_sum: { label: "Lump sum",         hint: "A one-time larger payment (bonus, tax refund, etc.)" },
+};
+
 const today = new Date().toISOString().slice(0, 10);
 
 export default function DebtDetail() {
@@ -88,60 +94,94 @@ export default function DebtDetail() {
       <div className="bg-white rounded-2xl border border-zinc-200 p-5 mb-4">
         <div className="flex justify-between items-center mb-3">
           <div>
-            <p className="text-xs text-zinc-400 uppercase tracking-widest mb-1">Balance</p>
+            <p className="text-xs text-zinc-400 uppercase tracking-widest mb-1">Balance Remaining</p>
             <p className="text-3xl font-bold text-zinc-800">${debt.balance.toFixed(2)}</p>
           </div>
           <div className="text-right">
-            <p className="text-xs text-zinc-400">Original</p>
+            <p className="text-xs text-zinc-400">Started at</p>
             <p className="text-sm text-zinc-500">${debt.original_balance.toFixed(2)}</p>
-            <p className="text-xs text-zinc-400 mt-1">{debt.interest_rate}% APR</p>
+            {debt.interest_rate > 0 && (
+              <p className="text-xs text-zinc-400 mt-1">{debt.interest_rate}% APR</p>
+            )}
           </div>
         </div>
         <div className="h-2 bg-zinc-100 rounded-full overflow-hidden">
           <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${paid}%` }} />
         </div>
-        <p className="text-xs text-zinc-400 mt-1">{paid.toFixed(0)}% paid off</p>
+        <div className="flex justify-between items-center mt-1">
+          <p className="text-xs text-zinc-400">{paid.toFixed(0)}% paid off</p>
+          <p className="text-xs text-zinc-400">Min: ${debt.minimum_payment.toFixed(2)}/mo</p>
+        </div>
       </div>
 
       {/* Log form */}
       <div className="bg-white rounded-2xl border border-zinc-200 p-5 mb-4">
-        <div className="flex rounded-xl overflow-hidden border border-zinc-200 mb-4">
+        {/* Mode toggle */}
+        <div className="flex rounded-xl overflow-hidden border border-zinc-200 mb-2">
           <button onClick={() => setMode("payment")}
-            className={`flex-1 py-2 text-sm transition-colors ${mode === "payment" ? "bg-zinc-800 text-white" : "bg-white text-zinc-500"}`}>
-            Log Payment
+            className={`flex-1 py-2.5 text-sm font-medium transition-colors ${mode === "payment" ? "bg-zinc-800 text-white" : "bg-white text-zinc-500"}`}>
+            I Made a Payment
           </button>
           <button onClick={() => setMode("balance_update")}
-            className={`flex-1 py-2 text-sm transition-colors ${mode === "balance_update" ? "bg-zinc-800 text-white" : "bg-white text-zinc-500"}`}>
-            Update Balance
+            className={`flex-1 py-2.5 text-sm font-medium transition-colors ${mode === "balance_update" ? "bg-zinc-800 text-white" : "bg-white text-zinc-500"}`}>
+            Correct the Balance
           </button>
         </div>
+        <p className="text-xs text-zinc-400 mb-4">
+          {mode === "payment"
+            ? "Use this when you've actually paid money toward this debt — it reduces the balance by the amount you paid."
+            : "Use this when your statement shows a different number (e.g. interest was added, or you want to sync with your actual account balance)."}
+        </p>
 
         <form onSubmit={handlePayment} className="flex flex-col gap-3">
           {mode === "payment" ? (
             <>
-              <div className="flex gap-2">
-                <input type="number" step="0.01" min="0" placeholder="Amount" value={amount}
-                  onChange={(e) => setAmount(e.target.value)} className="input flex-1" required />
-                <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="input" />
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs text-zinc-400">Amount paid ($)</label>
+                  {debt.minimum_payment > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setAmount(String(debt.minimum_payment.toFixed(2)))}
+                      className="text-xs text-zinc-500 border border-zinc-200 rounded px-2 py-0.5 hover:border-zinc-400"
+                    >
+                      Fill minimum (${debt.minimum_payment.toFixed(2)})
+                    </button>
+                  )}
+                </div>
+                <input type="number" step="0.01" min="0" placeholder="0.00" value={amount}
+                  onChange={(e) => setAmount(e.target.value)} className="input" required />
               </div>
-              <select value={payType} onChange={(e) => setPayType(e.target.value)} className="input">
-                <option value="minimum">Minimum</option>
-                <option value="extra">Extra</option>
-                <option value="lump_sum">Lump Sum</option>
-              </select>
+
+              <div className="flex flex-col gap-1">
+                <label className="text-xs text-zinc-400">Payment type</label>
+                <select value={payType} onChange={(e) => setPayType(e.target.value)} className="input">
+                  {Object.entries(PAYMENT_TYPE_LABELS).map(([val, { label }]) => (
+                    <option key={val} value={val}>{label}</option>
+                  ))}
+                </select>
+                <p className="text-xs text-zinc-400">{PAYMENT_TYPE_LABELS[payType]?.hint}</p>
+              </div>
             </>
           ) : (
-            <div className="flex gap-2">
-              <input type="number" step="0.01" min="0" placeholder="New balance" value={newBalance}
-                onChange={(e) => setNewBalance(e.target.value)} className="input flex-1" required />
-              <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="input" />
+            <div className="flex flex-col gap-1">
+              <label className="text-xs text-zinc-400">New balance ($) — enter what your statement shows</label>
+              <input type="number" step="0.01" min="0" placeholder="0.00" value={newBalance}
+                onChange={(e) => setNewBalance(e.target.value)} className="input" required />
             </div>
           )}
-          <input type="text" placeholder="Note (optional)" value={note}
+
+          <div className="flex flex-col gap-1">
+            <label className="text-xs text-zinc-400">Date</label>
+            <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="input" />
+          </div>
+
+          <input type="text" placeholder="Note (optional — e.g. 'paid from tax refund')" value={note}
             onChange={(e) => setNote(e.target.value)} className="input" />
+
           <button type="submit" disabled={saving}
             className="bg-zinc-800 text-white rounded-xl py-2.5 text-sm font-medium disabled:opacity-50">
-            {saving ? "Saving…" : mode === "payment" ? "Log Payment" : "Update Balance"}
+            {saving ? "Saving…" : mode === "payment" ? "Record Payment" : "Update Balance"}
           </button>
         </form>
       </div>
@@ -149,13 +189,16 @@ export default function DebtDetail() {
       {/* Payment history */}
       {payments.length > 0 && (
         <>
-          <p className="text-xs text-zinc-400 uppercase tracking-widest mb-3">History</p>
+          <p className="text-xs text-zinc-400 uppercase tracking-widest mb-3">Payment History</p>
           <div className="flex flex-col gap-2">
             {payments.map((p) => (
               <div key={p.id} className="bg-white rounded-xl border border-zinc-200 px-4 py-3 flex justify-between items-center">
                 <div>
                   <p className="text-sm text-zinc-700">{p.date}</p>
-                  <p className="text-xs text-zinc-400 capitalize">{p.payment_type.replace("_", " ")}{p.note ? ` · ${p.note}` : ""}</p>
+                  <p className="text-xs text-zinc-400">
+                    {PAYMENT_TYPE_LABELS[p.payment_type]?.label ?? p.payment_type.replace("_", " ")}
+                    {p.note ? ` · ${p.note}` : ""}
+                  </p>
                 </div>
                 <p className="text-sm font-semibold text-emerald-600">-${p.amount.toFixed(2)}</p>
               </div>

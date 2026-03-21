@@ -38,7 +38,7 @@ export async function POST(
   const body = await req.json();
   const { name, balance, minimum_payment, interest_rate, debt_type, is_shared } = body;
 
-  const VALID_DEBT_TYPES = ["credit_card", "loan", "medical", "student", "other"];
+  const VALID_DEBT_TYPES = ["credit_card", "loan", "medical", "student", "past_due_bill", "other"];
 
   if (!name || typeof name !== "string" || name.trim().length === 0) {
     return NextResponse.json({ error: "name is required" }, { status: 400 });
