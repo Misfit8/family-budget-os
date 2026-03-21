@@ -163,6 +163,11 @@ const SECTIONS: { title: string; items: FAQItem[] }[] = [
         short: "How much of the shared bills still needs to be paid this month.",
         long: "Total bills minus what's already been marked paid. This updates immediately when you mark bills as paid.",
       },
+      {
+        term: "Recurring bills (🔁)",
+        short: "Bills that auto-generate every month or every week.",
+        long: "When adding a bill, choose 'Monthly' or 'Weekly' from the Repeat dropdown. Monthly bills appear once per month on the day you picked. Weekly bills appear every week on that day of the week. The 🔁 icon on a bill means it was created by a recurring template. To stop a recurring bill, tap 'Recurring Bills' at the bottom of the hub and remove the series.",
+      },
     ],
   },
   {

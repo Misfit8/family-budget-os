@@ -201,8 +201,23 @@ function initSchema(db: Database.Database) {
     CREATE INDEX IF NOT EXISTS idx_ssi_user              ON ssi_assets(user_id);
   `);
 
+  // Recurring bills
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS recurring_bills (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      household_id INTEGER NOT NULL DEFAULT 1,
+      name TEXT NOT NULL,
+      amount REAL NOT NULL,
+      frequency TEXT NOT NULL,
+      due_day INTEGER NOT NULL,
+      active INTEGER DEFAULT 1,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+  `);
+
   // Other migrations
   try { db.exec("ALTER TABLE runs ADD COLUMN note TEXT"); } catch { /* already exists */ }
+  try { db.exec("ALTER TABLE shared_bills ADD COLUMN recurring_bill_id INTEGER"); } catch { /* already exists */ }
 
   // Seed default household
   const hCount = (db.prepare("SELECT COUNT(*) as c FROM households").get() as { c: number }).c;
@@ -225,5 +240,51 @@ function initSchema(db: Database.Database) {
     });
     seedMany();
     console.log("DB seeded with family members.");
+  }
+}
+
+interface RecurringBillRow {
+  id: number; name: string; amount: number; frequency: string; due_day: number;
+}
+
+/** Auto-generate shared_bills instances from recurring templates for the given month (YYYY-MM). */
+export function syncRecurringBills(db: Database.Database, month: string) {
+  const [yearStr, monthStr] = month.split("-");
+  const year = Number(yearStr);
+  const monthNum = Number(monthStr); // 1-based
+  const daysInMonth = new Date(year, monthNum, 0).getDate();
+
+  const templates = db
+    .prepare("SELECT * FROM recurring_bills WHERE active = 1")
+    .all() as RecurringBillRow[];
+
+  for (const rb of templates) {
+    if (rb.frequency === "monthly") {
+      const exists = db
+        .prepare("SELECT id FROM shared_bills WHERE recurring_bill_id = ? AND month = ?")
+        .get(rb.id, month);
+      if (!exists) {
+        const day = Math.min(rb.due_day, daysInMonth);
+        const dueDate = `${month}-${String(day).padStart(2, "0")}`;
+        db.prepare(
+          "INSERT INTO shared_bills (name, amount, due_date, month, recurring_bill_id, household_id) VALUES (?, ?, ?, ?, ?, 1)"
+        ).run(rb.name, rb.amount, dueDate, month, rb.id);
+      }
+    } else if (rb.frequency === "weekly") {
+      for (let d = 1; d <= daysInMonth; d++) {
+        const date = new Date(year, monthNum - 1, d);
+        if (date.getDay() === rb.due_day) {
+          const dueDate = `${month}-${String(d).padStart(2, "0")}`;
+          const exists = db
+            .prepare("SELECT id FROM shared_bills WHERE recurring_bill_id = ? AND due_date = ?")
+            .get(rb.id, dueDate);
+          if (!exists) {
+            db.prepare(
+              "INSERT INTO shared_bills (name, amount, due_date, month, recurring_bill_id, household_id) VALUES (?, ?, ?, ?, ?, 1)"
+            ).run(rb.name, rb.amount, dueDate, month, rb.id);
+          }
+        }
+      }
+    }
   }
 }

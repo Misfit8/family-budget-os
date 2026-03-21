@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getDb } from "@/lib/db";
+import { getDb, syncRecurringBills } from "@/lib/db";
 
 export async function GET() {
   const db = getDb();
@@ -11,13 +11,21 @@ export async function GET() {
 
   const month = new Date().toISOString().slice(0, 7); // YYYY-MM
 
+  // Auto-generate any recurring bill instances for this month
+  syncRecurringBills(db, month);
+
   // Shared bills this month
   const bills = db
     .prepare("SELECT * FROM shared_bills WHERE month = ? ORDER BY due_date ASC")
     .all(month) as {
       id: number; name: string; amount: number; due_date: string;
-      paid_by_user_id: number | null; paid: number;
+      paid_by_user_id: number | null; paid: number; recurring_bill_id: number | null;
     }[];
+
+  // Recurring templates (for management UI)
+  const recurringTemplates = db
+    .prepare("SELECT * FROM recurring_bills WHERE active = 1 ORDER BY name ASC")
+    .all() as { id: number; name: string; amount: number; frequency: string; due_day: number }[];
 
   // Per-member data
   const members = users.map((u) => {
@@ -85,5 +93,5 @@ export async function GET() {
   const totalBills = bills.reduce((s, b) => s + b.amount, 0);
   const paidBills = bills.filter((b) => b.paid).reduce((s, b) => s + b.amount, 0);
 
-  return NextResponse.json({ members, bills, householdRunway, totalBills, paidBills, month });
+  return NextResponse.json({ members, bills, recurringTemplates, householdRunway, totalBills, paidBills, month });
 }

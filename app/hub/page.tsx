@@ -23,15 +23,37 @@ type Member = GigMember | W2Member | SSIMember | TBDMember;
 interface Bill {
   id: number; name: string; amount: number;
   due_date: string | null; paid: number; paid_by_user_id: number | null;
+  recurring_bill_id: number | null;
+}
+
+interface RecurringTemplate {
+  id: number; name: string; amount: number; frequency: string; due_day: number;
 }
 
 interface HubData {
   members: Member[];
   bills: Bill[];
+  recurringTemplates: RecurringTemplate[];
   householdRunway: number | null;
   totalBills: number;
   paidBills: number;
   month: string;
+}
+
+const WEEKDAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+function recurringLabel(t: RecurringTemplate): string {
+  if (t.frequency === "monthly") return `Monthly on the ${t.due_day}${ordinal(t.due_day)}`;
+  if (t.frequency === "weekly") return `Every ${WEEKDAY_NAMES[t.due_day]}`;
+  return t.frequency;
+}
+
+function ordinal(n: number): string {
+  if (n >= 11 && n <= 13) return "th";
+  if (n % 10 === 1) return "st";
+  if (n % 10 === 2) return "nd";
+  if (n % 10 === 3) return "rd";
+  return "th";
 }
 
 function runwayColor(days: number | null) {
@@ -44,9 +66,11 @@ function runwayColor(days: number | null) {
 export default function HubPage() {
   const [data, setData] = useState<HubData | null>(null);
   const [showAddBill, setShowAddBill] = useState(false);
+  const [showManageRecurring, setShowManageRecurring] = useState(false);
   const [billName, setBillName] = useState("");
   const [billAmount, setBillAmount] = useState("");
   const [billDue, setBillDue] = useState("");
+  const [billFrequency, setBillFrequency] = useState<"once" | "weekly" | "monthly">("once");
   const [saving, setSaving] = useState(false);
 
   async function load() {
@@ -60,14 +84,34 @@ export default function HubPage() {
     e.preventDefault();
     if (!billName || !billAmount) return;
     setSaving(true);
+
+    let due_day: number | null = null;
+    if (billFrequency !== "once" && billDue) {
+      // Parse date string directly to avoid UTC timezone shift
+      const [, , dayStr] = billDue.split("-");
+      if (billFrequency === "monthly") due_day = parseInt(dayStr, 10);
+      if (billFrequency === "weekly") due_day = new Date(billDue + "T12:00:00").getDay();
+    }
+
     await fetch("/api/bills", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: billName, amount: Number(billAmount), due_date: billDue || null }),
+      body: JSON.stringify({
+        name: billName,
+        amount: Number(billAmount),
+        due_date: billFrequency === "once" ? (billDue || null) : null,
+        frequency: billFrequency,
+        due_day,
+      }),
     });
     setSaving(false);
-    setBillName(""); setBillAmount(""); setBillDue("");
+    setBillName(""); setBillAmount(""); setBillDue(""); setBillFrequency("once");
     setShowAddBill(false);
+    load();
+  }
+
+  async function cancelRecurring(id: number) {
+    await fetch(`/api/bills/recurring/${id}`, { method: "DELETE" });
     load();
   }
 
@@ -94,7 +138,6 @@ export default function HubPage() {
   }
 
   const unpaidTotal = data.totalBills - data.paidBills;
-  const gigMembers = data.members.filter((m) => m.income_type === "gig") as GigMember[];
 
   return (
     <div className="min-h-screen bg-zinc-50 px-4 py-8 max-w-md mx-auto">
@@ -187,21 +230,38 @@ export default function HubPage() {
               />
             </div>
             <div className="flex-1 flex flex-col gap-1">
-              <label className="text-xs text-zinc-400">Due date (optional)</label>
-              <input
-                type="date"
-                value={billDue}
-                onChange={(e) => setBillDue(e.target.value)}
+              <label className="text-xs text-zinc-400">Repeat</label>
+              <select
+                value={billFrequency}
+                onChange={(e) => setBillFrequency(e.target.value as "once" | "weekly" | "monthly")}
                 className="input"
-              />
+              >
+                <option value="once">One-time</option>
+                <option value="monthly">Monthly</option>
+                <option value="weekly">Weekly</option>
+              </select>
             </div>
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-xs text-zinc-400">
+              {billFrequency === "once" ? "Due date (optional)" :
+               billFrequency === "monthly" ? "Pick any date — the day of the month repeats (e.g. 15th)" :
+               "Pick any date — the day of the week repeats (e.g. every Friday)"}
+            </label>
+            <input
+              type="date"
+              value={billDue}
+              onChange={(e) => setBillDue(e.target.value)}
+              required={billFrequency !== "once"}
+              className="input"
+            />
           </div>
           <button
             type="submit"
             disabled={saving}
             className="bg-zinc-800 text-white rounded-xl py-2.5 text-sm font-medium disabled:opacity-50"
           >
-            {saving ? "Saving…" : "Add Bill"}
+            {saving ? "Saving…" : billFrequency === "once" ? "Add Bill" : "Add Recurring Bill"}
           </button>
         </form>
       )}
@@ -233,6 +293,7 @@ export default function HubPage() {
                 <div className="flex-1 min-w-0">
                   <p className={`text-sm font-medium truncate ${bill.paid ? "line-through text-zinc-400" : "text-zinc-800"}`}>
                     {bill.name}
+                    {bill.recurring_bill_id && <span className="ml-1 text-xs text-zinc-400">🔁</span>}
                   </p>
                   <p className="text-xs text-zinc-400">
                     {bill.paid ? "✓ Paid" : bill.due_date ? `Due ${bill.due_date}` : "No due date"}
@@ -252,6 +313,40 @@ export default function HubPage() {
             ))}
           </div>
         </>
+      )}
+
+      {/* Recurring bill templates */}
+      {data.recurringTemplates.length > 0 && (
+        <div className="mt-6">
+          <button
+            onClick={() => setShowManageRecurring(!showManageRecurring)}
+            className="w-full flex items-center justify-between text-xs text-zinc-400 uppercase tracking-widest py-2"
+          >
+            <span>Recurring Bills ({data.recurringTemplates.length})</span>
+            <span>{showManageRecurring ? "−" : "+"}</span>
+          </button>
+          {showManageRecurring && (
+            <div className="flex flex-col gap-2 mt-2">
+              <p className="text-xs text-zinc-400">These auto-generate every month. Remove one to stop it.</p>
+              {data.recurringTemplates.map((t) => (
+                <div key={t.id} className="bg-white rounded-xl border border-zinc-200 px-4 py-3 flex items-center gap-3">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-zinc-800">{t.name}</p>
+                    <p className="text-xs text-zinc-400">{recurringLabel(t)}</p>
+                  </div>
+                  <p className="text-sm font-semibold text-zinc-700 flex-shrink-0">${t.amount.toFixed(2)}</p>
+                  <button
+                    onClick={() => cancelRecurring(t.id)}
+                    title="Cancel recurring bill"
+                    className="text-zinc-300 hover:text-red-400 flex-shrink-0 p-1"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       )}
 
       <style>{`
