@@ -161,12 +161,38 @@ export default function HubPage() {
         <p className="text-xs text-zinc-400 mt-2">Based on lowest gig buffer runway</p>
       </div>
 
-      {/* Member cards */}
+      {/* Member cards — gig users are merged into one "Parents" card */}
       <p className="text-xs text-zinc-400 uppercase tracking-widest mb-3">Members</p>
       <div className="flex flex-col gap-3 mb-6">
-        {data.members.map((m) => (
-          <MemberCard key={m.id} member={m} />
-        ))}
+        {(() => {
+          const gigMembers = data.members.filter((m) => m.income_type === "gig") as GigMember[];
+          const others = data.members.filter((m) => m.income_type !== "gig");
+          const combinedWeekEarnings = gigMembers.reduce((s, m) => s + m.weekEarnings, 0);
+          const combinedWeekTarget = gigMembers.reduce((s, m) => s + m.weekTarget, 0);
+          return (
+            <>
+              {gigMembers.length > 0 && (
+                <Link href="/gig/household" className="bg-white rounded-xl border border-zinc-200 px-4 py-3 flex items-center justify-between hover:border-zinc-400 transition-colors">
+                  <div>
+                    <p className="text-sm font-semibold text-zinc-800">Parents</p>
+                    <p className="text-xs text-zinc-400">Gig delivery</p>
+                  </div>
+                  <div className="text-right">
+                    <p className={`text-sm font-semibold ${runwayColor(data.householdRunway)}`}>
+                      {data.householdRunway !== null ? `${Math.floor(data.householdRunway)}d runway` : "No runway"}
+                    </p>
+                    <p className="text-xs text-zinc-400">
+                      ${combinedWeekEarnings.toFixed(0)} / ${combinedWeekTarget} wk
+                    </p>
+                  </div>
+                </Link>
+              )}
+              {others.map((m) => (
+                <MemberCard key={m.id} member={m} />
+              ))}
+            </>
+          );
+        })()}
       </div>
 
       {/* Shared Bills */}
