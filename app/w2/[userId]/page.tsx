@@ -35,6 +35,7 @@ const today = new Date().toISOString().slice(0, 10);
 export default function W2Dashboard() {
   const { userId } = useParams<{ userId: string }>();
   const [data, setData] = useState<W2Data | null>(null);
+  const [userName, setUserName] = useState("");
   const [editing, setEditing] = useState(false);
   const [showLogForm, setShowLogForm] = useState(false);
 
@@ -63,7 +64,10 @@ export default function W2Dashboard() {
     }
   }
 
-  useEffect(() => { load(); }, [userId]);
+  useEffect(() => {
+    load();
+    fetch(`/api/users/${userId}`).then(r => r.json()).then(u => setUserName(u.name ?? ""));
+  }, [userId]);
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
@@ -132,7 +136,7 @@ export default function W2Dashboard() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <Link href="/" className="text-zinc-400 text-sm">← Home</Link>
-        <h1 className="text-lg font-semibold text-zinc-800">Bro1</h1>
+        <h1 className="text-lg font-semibold text-zinc-800">{userName || "…"}</h1>
         <Link href="/help" className="text-xs text-zinc-400 border border-zinc-200 rounded-lg px-2 py-1 hover:border-zinc-400">
           Help ?
         </Link>

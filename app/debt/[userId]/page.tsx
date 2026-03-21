@@ -22,11 +22,10 @@ const DEBT_TYPE_EMOJI: Record<string, string> = {
   credit_card: "💳", loan: "🏦", medical: "🏥", student: "🎓", past_due_bill: "⚠️", other: "📋",
 };
 
-const NAMES: Record<string, string> = { "1": "Mom", "2": "Dad", "3": "Braddon", "4": "Bro1", "5": "Bro2" };
-
 export default function DebtDashboard() {
   const { userId } = useParams<{ userId: string }>();
   const [data, setData] = useState<DebtData | null>(null);
+  const [userName, setUserName] = useState("");
   const [strategy, setStrategy] = useState<"snowball" | "avalanche">("snowball");
   const [extra, setExtra] = useState(0);
   const [debouncedExtra, setDebouncedExtra] = useState(0);
@@ -45,6 +44,10 @@ export default function DebtDashboard() {
   }, [userId, debouncedExtra, strategy]);
 
   useEffect(() => { load(); }, [load]);
+
+  useEffect(() => {
+    fetch(`/api/users/${userId}`).then(r => r.json()).then(u => setUserName(u.name ?? ""));
+  }, [userId]);
 
   async function getInsight() {
     setLoadingInsight(true);
@@ -72,7 +75,7 @@ export default function DebtDashboard() {
     <div className="min-h-screen bg-zinc-50 px-4 py-8 max-w-md mx-auto">
       <div className="flex items-center justify-between mb-6">
         <Link href="/" className="text-zinc-400 text-sm">← Home</Link>
-        <h1 className="text-lg font-semibold text-zinc-800">{NAMES[userId]} · Debt</h1>
+        <h1 className="text-lg font-semibold text-zinc-800">{userName || "…"} · Debt</h1>
         <Link href={`/debt/${userId}/add`} className="text-sm text-zinc-500 border border-zinc-200 rounded-lg px-3 py-1 hover:border-zinc-400">
           + Add
         </Link>

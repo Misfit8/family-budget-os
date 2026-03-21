@@ -69,6 +69,7 @@ export default function HubPage() {
   const [data, setData] = useState<HubData | null>(null);
   const [showAddBill, setShowAddBill] = useState(false);
   const [showManageRecurring, setShowManageRecurring] = useState(false);
+  const [paidByPicker, setPaidByPicker] = useState<number | null>(null); // bill id awaiting "who paid?"
   const [billName, setBillName] = useState("");
   const [billAmount, setBillAmount] = useState("");
   const [billDue, setBillDue] = useState("");
@@ -117,13 +118,31 @@ export default function HubPage() {
     load();
   }
 
-  async function togglePaid(bill: Bill) {
-    await fetch(`/api/bills/${bill.id}`, {
+  async function markPaid(billId: number, paidByUserId: number | null) {
+    await fetch(`/api/bills/${billId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ paid: !bill.paid, paid_by_user_id: bill.paid ? null : 1 }),
+      body: JSON.stringify({ paid: true, paid_by_user_id: paidByUserId }),
+    });
+    setPaidByPicker(null);
+    load();
+  }
+
+  async function markUnpaid(billId: number) {
+    await fetch(`/api/bills/${billId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ paid: false, paid_by_user_id: null }),
     });
     load();
+  }
+
+  function togglePaid(bill: Bill) {
+    if (bill.paid) {
+      markUnpaid(bill.id);
+    } else {
+      setPaidByPicker(bill.id); // show "who paid?" instead of saving immediately
+    }
   }
 
   async function deleteBill(id: number) {
@@ -302,43 +321,82 @@ export default function HubPage() {
         </div>
       ) : (
         <>
-          <p className="text-xs text-zinc-400 mb-2">Tap the circle on any bill to mark it paid.</p>
+          <p className="text-xs text-zinc-400 mb-2">Tap the circle on any bill to mark it paid. You'll pick who paid it.</p>
           <div className="flex flex-col gap-2">
-            {data.bills.map((bill) => (
-              <div
-                key={bill.id}
-                className={`bg-white rounded-xl border px-4 py-3 flex items-center gap-3 ${
-                  bill.paid ? "border-emerald-100 opacity-60" : "border-zinc-200"
-                }`}
-              >
-                <button
-                  onClick={() => togglePaid(bill)}
-                  title={bill.paid ? "Mark unpaid" : "Mark as paid"}
-                  className={`w-5 h-5 rounded-full border-2 flex-shrink-0 transition-colors ${
-                    bill.paid ? "bg-emerald-500 border-emerald-500" : "border-zinc-300 hover:border-zinc-500"
-                  }`}
-                />
-                <div className="flex-1 min-w-0">
-                  <p className={`text-sm font-medium truncate ${bill.paid ? "line-through text-zinc-400" : "text-zinc-800"}`}>
-                    {bill.name}
-                    {bill.recurring_bill_id && <span className="ml-1 text-xs text-zinc-400">🔁</span>}
-                  </p>
-                  <p className="text-xs text-zinc-400">
-                    {bill.paid ? "✓ Paid" : bill.due_date ? `Due ${bill.due_date}` : "No due date"}
-                  </p>
+            {data.bills.map((bill) => {
+              const paidByMember = bill.paid_by_user_id
+                ? data.members.find(m => m.id === bill.paid_by_user_id)
+                : null;
+              const isPicking = paidByPicker === bill.id;
+              // For "who paid?" chips, show all non-gig members + one "Parents" option
+              const gigExists = data.members.some(m => m.income_type === "gig");
+              const payerOptions: { id: number | null; label: string }[] = [
+                ...(gigExists ? [{ id: 1, label: "Parents" }] : []),
+                ...data.members
+                  .filter(m => m.income_type !== "gig")
+                  .map(m => ({ id: m.id, label: m.name })),
+                { id: null, label: "Skip" },
+              ];
+
+              return (
+                <div key={bill.id} className={`bg-white rounded-xl border overflow-hidden ${
+                  bill.paid ? "border-emerald-100" : isPicking ? "border-zinc-400" : "border-zinc-200"
+                }`}>
+                  <div className={`px-4 py-3 flex items-center gap-3 ${bill.paid ? "opacity-60" : ""}`}>
+                    <button
+                      onClick={() => togglePaid(bill)}
+                      title={bill.paid ? "Mark unpaid" : "Mark as paid"}
+                      className={`w-5 h-5 rounded-full border-2 flex-shrink-0 transition-colors ${
+                        bill.paid ? "bg-emerald-500 border-emerald-500" : "border-zinc-300 hover:border-zinc-500"
+                      }`}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-sm font-medium truncate ${bill.paid ? "line-through text-zinc-400" : "text-zinc-800"}`}>
+                        {bill.name}
+                        {bill.recurring_bill_id && <span className="ml-1 text-xs text-zinc-400">🔁</span>}
+                      </p>
+                      <p className="text-xs text-zinc-400">
+                        {bill.paid
+                          ? `✓ Paid${paidByMember ? ` by ${paidByMember.name}` : ""}`
+                          : bill.due_date ? `Due ${bill.due_date}` : "No due date"}
+                      </p>
+                    </div>
+                    <p className="text-sm font-semibold text-zinc-700 flex-shrink-0">
+                      ${bill.amount.toFixed(2)}
+                    </p>
+                    <button
+                      onClick={() => deleteBill(bill.id)}
+                      title="Remove bill"
+                      className="text-zinc-300 hover:text-red-400 flex-shrink-0 p-1"
+                    >
+                      ✕
+                    </button>
+                  </div>
+
+                  {/* Inline "who paid?" picker */}
+                  {isPicking && (
+                    <div className="border-t border-zinc-100 px-4 py-3 bg-zinc-50">
+                      <p className="text-xs text-zinc-500 mb-2">Who paid this bill?</p>
+                      <div className="flex flex-wrap gap-2">
+                        {payerOptions.map((opt) => (
+                          <button
+                            key={String(opt.id)}
+                            onClick={() => markPaid(bill.id, opt.id)}
+                            className={`text-xs px-3 py-1.5 rounded-lg border transition-colors ${
+                              opt.id === null
+                                ? "border-zinc-200 text-zinc-400 hover:border-zinc-400"
+                                : "border-zinc-300 text-zinc-700 bg-white hover:border-zinc-800 hover:bg-zinc-800 hover:text-white"
+                            }`}
+                          >
+                            {opt.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
-                <p className="text-sm font-semibold text-zinc-700 flex-shrink-0">
-                  ${bill.amount.toFixed(2)}
-                </p>
-                <button
-                  onClick={() => deleteBill(bill.id)}
-                  title="Remove bill"
-                  className="text-zinc-300 hover:text-red-400 flex-shrink-0 p-1"
-                >
-                  ✕
-                </button>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </>
       )}

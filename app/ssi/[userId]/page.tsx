@@ -33,13 +33,17 @@ const STATUS_MSG = {
 export default function SSIDashboard() {
   const { userId } = useParams<{ userId: string }>();
   const [data, setData] = useState<SSIData | null>(null);
+  const [userName, setUserName] = useState("");
 
   async function load() {
     const res = await fetch(`/api/ssi/${userId}`);
     setData(await res.json());
   }
 
-  useEffect(() => { load(); }, [userId]);
+  useEffect(() => {
+    load();
+    fetch(`/api/users/${userId}`).then(r => r.json()).then(u => setUserName(u.name ?? ""));
+  }, [userId]);
 
   if (!data) {
     return (
@@ -63,7 +67,7 @@ export default function SSIDashboard() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <Link href="/" className="text-zinc-400 text-sm">← Home</Link>
-        <h1 className="text-lg font-semibold text-zinc-800">Braddon</h1>
+        <h1 className="text-lg font-semibold text-zinc-800">{userName || "…"}</h1>
         <Link href="/help" className="text-xs text-zinc-400 border border-zinc-200 rounded-lg px-2 py-1 hover:border-zinc-400">
           Help ?
         </Link>
