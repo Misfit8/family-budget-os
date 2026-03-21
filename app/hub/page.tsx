@@ -12,6 +12,8 @@ interface GigMember {
 interface W2Member {
   id: number; name: string; income_type: "w2";
   w2?: { net_take_home: number; pay_frequency: string; next_payday: string };
+  lastPaycheck?: number | null;
+  rollingAvg?: number | null;
 }
 interface SSIMember {
   id: number; name: string; income_type: "ssi";
@@ -430,10 +432,12 @@ function MemberStat({ member }: { member: Member }) {
   }
   if (member.income_type === "w2") {
     const m = member as W2Member;
+    const display = m.rollingAvg ?? m.lastPaycheck ?? m.w2?.net_take_home;
+    const label = m.rollingAvg ? "avg/check" : m.lastPaycheck ? "last check" : m.w2?.pay_frequency ?? "";
     return (
       <div className="text-right">
         <p className="text-sm font-semibold text-zinc-600">
-          {m.w2 ? `$${m.w2.net_take_home} ${m.w2.pay_frequency}` : "Not set up"}
+          {display != null ? `$${display.toFixed(0)} ${label}` : "Not set up"}
         </p>
         {m.w2?.next_payday && <p className="text-xs text-zinc-400">Next: {m.w2.next_payday}</p>}
       </div>

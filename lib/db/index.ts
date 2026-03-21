@@ -201,6 +201,20 @@ function initSchema(db: Database.Database) {
     CREATE INDEX IF NOT EXISTS idx_ssi_user              ON ssi_assets(user_id);
   `);
 
+  // W-2 paycheck log (for variable-hours workers)
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS w2_paychecks (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      household_id INTEGER NOT NULL DEFAULT 1,
+      user_id INTEGER NOT NULL,
+      date TEXT NOT NULL,
+      amount REAL NOT NULL,
+      hours REAL,
+      note TEXT,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+  `);
+
   // Recurring bills
   db.exec(`
     CREATE TABLE IF NOT EXISTS recurring_bills (

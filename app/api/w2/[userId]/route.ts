@@ -23,8 +23,6 @@ export async function GET(
   }
 
   const today = new Date();
-  const nextPayday = new Date(settings.next_payday);
-  const daysToPayday = Math.ceil((nextPayday.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 
   // Project the actual next payday if it's in the past
   let projectedNext = new Date(settings.next_payday);
@@ -38,6 +36,16 @@ export async function GET(
 
   const daysToNext = Math.ceil((projectedNext.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 
+  // Paycheck history
+  const paychecks = db
+    .prepare("SELECT * FROM w2_paychecks WHERE user_id = ? ORDER BY date DESC LIMIT 10")
+    .all(uid) as { id: number; date: string; amount: number; hours: number | null; note: string | null }[];
+
+  const recent3 = paychecks.slice(0, 3);
+  const rollingAvg = recent3.length > 0
+    ? recent3.reduce((s, p) => s + p.amount, 0) / recent3.length
+    : null;
+
   return NextResponse.json({
     configured: true,
     net_take_home: settings.net_take_home,
@@ -45,6 +53,9 @@ export async function GET(
     next_payday: projectedNext.toISOString().slice(0, 10),
     days_to_payday: daysToNext,
     freq_days: freqDays,
+    paychecks,
+    last_paycheck: paychecks[0] ?? null,
+    rolling_avg: rollingAvg,
   });
 }
 

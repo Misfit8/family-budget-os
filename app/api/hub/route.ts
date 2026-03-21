@@ -69,7 +69,16 @@ export async function GET() {
       const w2 = db
         .prepare("SELECT * FROM w2_settings WHERE user_id = ?")
         .get(u.id) as { net_take_home: number; pay_frequency: string; next_payday: string } | undefined;
-      return { id: u.id, name: u.name, income_type: u.income_type, w2 };
+      const lastPaycheck = db
+        .prepare("SELECT amount FROM w2_paychecks WHERE user_id = ? ORDER BY date DESC LIMIT 1")
+        .get(u.id) as { amount: number } | undefined;
+      const recent3 = db
+        .prepare("SELECT amount FROM w2_paychecks WHERE user_id = ? ORDER BY date DESC LIMIT 3")
+        .all(u.id) as { amount: number }[];
+      const rollingAvg = recent3.length > 0
+        ? recent3.reduce((s, p) => s + p.amount, 0) / recent3.length
+        : null;
+      return { id: u.id, name: u.name, income_type: u.income_type, w2, lastPaycheck: lastPaycheck?.amount ?? null, rollingAvg };
     }
 
     if (u.income_type === "ssi") {
