@@ -189,16 +189,19 @@ export default function HubPage() {
 
       {/* Month navigation */}
       <div className="flex items-center justify-between bg-white rounded-xl border border-zinc-200 px-4 py-2 mb-6">
-        <button onClick={() => goMonth(-1)} className="text-zinc-400 hover:text-zinc-700 text-lg px-2">‹</button>
+        <button onClick={() => goMonth(-1)} className="text-zinc-400 hover:text-zinc-700 text-xl px-4 py-3">‹</button>
         <div className="text-center">
           <p className="text-sm font-semibold text-zinc-800">{formatMonthLabel(selectedMonth)}</p>
           {selectedMonth !== data.today && (
-            <button onClick={() => setSelectedMonth(data.today)} className="text-xs text-zinc-400 hover:text-zinc-600 underline">
+            <button
+              onClick={() => setSelectedMonth(data.today)}
+              className="text-xs text-zinc-400 hover:text-zinc-600 underline py-1.5 px-2 inline-block"
+            >
               Back to today
             </button>
           )}
         </div>
-        <button onClick={() => goMonth(1)} className="text-zinc-400 hover:text-zinc-700 text-lg px-2">›</button>
+        <button onClick={() => goMonth(1)} className="text-zinc-400 hover:text-zinc-700 text-xl px-4 py-3">›</button>
       </div>
 
       {/* Household Runway */}
