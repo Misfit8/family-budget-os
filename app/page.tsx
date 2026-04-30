@@ -53,7 +53,6 @@ function MemberCard({ user, onRenamed }: { user: User; onRenamed: (id: number, n
   return (
     <div className="flex items-center gap-4 bg-white border border-zinc-200 rounded-xl px-5 py-4 text-zinc-800 font-medium hover:border-zinc-400 transition-colors">
       <Link href={href} className="flex items-center gap-4 flex-1 min-w-0">
-        <span className="text-2xl flex-shrink-0">{emoji}</span>
         <div className="min-w-0">
           {editing ? null : <div className="font-semibold truncate">{user.name}</div>}
           <div className="text-xs text-zinc-400 mt-0.5">{sub}</div>
@@ -62,7 +61,6 @@ function MemberCard({ user, onRenamed }: { user: User; onRenamed: (id: number, n
 
       {editing ? (
         <div className="flex items-center gap-2 flex-1">
-          <span className="text-2xl flex-shrink-0">{emoji}</span>
           <input
             ref={inputRef}
             value={draft}
@@ -125,7 +123,6 @@ export default function Home() {
           href="/hub"
           className="flex items-center gap-4 bg-zinc-800 text-white rounded-xl px-5 py-4 font-medium"
         >
-          <span className="text-2xl">🏠</span>
           <div>
             <div className="font-semibold">Family Hub</div>
             <div className="text-xs text-zinc-400 mt-0.5">Shared bills · household overview</div>
@@ -138,7 +135,6 @@ export default function Home() {
           href="/gig/household"
           className="flex items-center gap-4 bg-white border border-zinc-200 rounded-xl px-5 py-4 text-zinc-800 font-medium hover:border-zinc-400 transition-colors"
         >
-          <span className="text-2xl">🛵</span>
           <div>
             <div className="font-semibold">Parents</div>
             <div className="text-xs text-zinc-400 mt-0.5">Gig delivery · earnings & runway</div>
