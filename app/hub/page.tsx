@@ -40,6 +40,7 @@ interface HubData {
   totalBills: number;
   paidBills: number;
   month: string;
+  today: string;
 }
 
 const WEEKDAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -65,8 +66,20 @@ function runwayColor(days: number | null) {
   return "text-red-500";
 }
 
+function offsetMonth(base: string, delta: number): string {
+  const [y, m] = base.split("-").map(Number);
+  const d = new Date(y, m - 1 + delta, 1);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function formatMonthLabel(month: string): string {
+  const [y, m] = month.split("-").map(Number);
+  return new Date(y, m - 1, 1).toLocaleDateString("en-US", { month: "long", year: "numeric" });
+}
+
 export default function HubPage() {
   const [data, setData] = useState<HubData | null>(null);
+  const [selectedMonth, setSelectedMonth] = useState<string>(() => new Date().toISOString().slice(0, 7));
   const [showAddBill, setShowAddBill] = useState(false);
   const [showManageRecurring, setShowManageRecurring] = useState(false);
   const [paidByPicker, setPaidByPicker] = useState<number | null>(null); // bill id awaiting "who paid?"
@@ -76,12 +89,16 @@ export default function HubPage() {
   const [billFrequency, setBillFrequency] = useState<"once" | "weekly" | "monthly">("once");
   const [saving, setSaving] = useState(false);
 
-  async function load() {
-    const res = await fetch("/api/hub");
+  async function load(month: string) {
+    const res = await fetch(`/api/hub?month=${month}`);
     setData(await res.json());
   }
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(selectedMonth); }, [selectedMonth]);
+
+  function goMonth(delta: number) {
+    setSelectedMonth((prev) => offsetMonth(prev, delta));
+  }
 
   async function addBill(e: React.FormEvent) {
     e.preventDefault();
@@ -103,6 +120,7 @@ export default function HubPage() {
         name: billName,
         amount: Number(billAmount),
         due_date: billFrequency === "once" ? (billDue || null) : null,
+        month: selectedMonth,
         frequency: billFrequency,
         due_day,
       }),
@@ -110,12 +128,12 @@ export default function HubPage() {
     setSaving(false);
     setBillName(""); setBillAmount(""); setBillDue(""); setBillFrequency("once");
     setShowAddBill(false);
-    load();
+    load(selectedMonth);
   }
 
   async function cancelRecurring(id: number) {
     await fetch(`/api/bills/recurring/${id}`, { method: "DELETE" });
-    load();
+    load(selectedMonth);
   }
 
   async function markPaid(billId: number, paidByUserId: number | null) {
@@ -125,7 +143,7 @@ export default function HubPage() {
       body: JSON.stringify({ paid: true, paid_by_user_id: paidByUserId }),
     });
     setPaidByPicker(null);
-    load();
+    load(selectedMonth);
   }
 
   async function markUnpaid(billId: number) {
@@ -134,7 +152,7 @@ export default function HubPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ paid: false, paid_by_user_id: null }),
     });
-    load();
+    load(selectedMonth);
   }
 
   function togglePaid(bill: Bill) {
@@ -147,7 +165,7 @@ export default function HubPage() {
 
   async function deleteBill(id: number) {
     await fetch(`/api/bills/${id}`, { method: "DELETE" });
-    load();
+    load(selectedMonth);
   }
 
   if (!data) {
@@ -163,10 +181,24 @@ export default function HubPage() {
   return (
     <div className="min-h-screen bg-zinc-50 px-4 py-8 max-w-md mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4">
         <Link href="/" className="text-zinc-400 text-sm">← Home</Link>
         <h1 className="text-lg font-semibold text-zinc-800">Family Hub</h1>
-        <span className="text-xs text-zinc-400">{data.month}</span>
+        <div className="w-10" />
+      </div>
+
+      {/* Month navigation */}
+      <div className="flex items-center justify-between bg-white rounded-xl border border-zinc-200 px-4 py-2 mb-6">
+        <button onClick={() => goMonth(-1)} className="text-zinc-400 hover:text-zinc-700 text-lg px-2">‹</button>
+        <div className="text-center">
+          <p className="text-sm font-semibold text-zinc-800">{formatMonthLabel(selectedMonth)}</p>
+          {selectedMonth !== data.today && (
+            <button onClick={() => setSelectedMonth(data.today)} className="text-xs text-zinc-400 hover:text-zinc-600 underline">
+              Back to today
+            </button>
+          )}
+        </div>
+        <button onClick={() => goMonth(1)} className="text-zinc-400 hover:text-zinc-700 text-lg px-2">›</button>
       </div>
 
       {/* Household Runway */}

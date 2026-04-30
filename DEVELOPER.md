@@ -243,7 +243,7 @@ Cached 6 days — only regenerated when stale or `?refresh=1` is passed.
 ### Hub & Bills
 | Method | Path | Purpose |
 |---|---|---|
-| GET | `/api/hub` | Household stats (runway, members, bills) |
+| GET | `/api/hub?month=YYYY-MM` | Household stats (runway, members, bills). Defaults to current month. Pass any YYYY-MM to view a future (or past) month. |
 | POST | `/api/bills` | Create shared bill |
 | PATCH | `/api/bills/[id]` | Mark paid/unpaid |
 | DELETE | `/api/bills/[id]` | Remove bill |
@@ -371,6 +371,7 @@ app/components/
 - [x] Debt Freedom: snowball/avalanche simulation + Claude insight
 - [x] Savings goals (individual + family, ABLE flag)
 - [x] Weekly AI digest (cached 6 days)
+- [x] Future/past month bill navigation (‹ › arrows on hub, "Back to today" link)
 - [x] Auto-generated notifications
 - [x] Multi-household infrastructure
 

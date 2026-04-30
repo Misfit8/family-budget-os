@@ -1,7 +1,7 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getDb, syncRecurringBills } from "@/lib/db";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const db = getDb();
 
   // All family members
@@ -9,7 +9,9 @@ export async function GET() {
     id: number; name: string; income_type: string; weekly_salary_target: number;
   }[];
 
-  const month = new Date().toISOString().slice(0, 7); // YYYY-MM
+  const today = new Date().toISOString().slice(0, 7); // YYYY-MM
+  const requested = req.nextUrl.searchParams.get("month");
+  const month = requested && /^\d{4}-\d{2}$/.test(requested) ? requested : today;
 
   // Auto-generate any recurring bill instances for this month
   syncRecurringBills(db, month);
@@ -102,5 +104,5 @@ export async function GET() {
   const totalBills = bills.reduce((s, b) => s + b.amount, 0);
   const paidBills = bills.filter((b) => b.paid).reduce((s, b) => s + b.amount, 0);
 
-  return NextResponse.json({ members, bills, recurringTemplates, householdRunway, totalBills, paidBills, month });
+  return NextResponse.json({ members, bills, recurringTemplates, householdRunway, totalBills, paidBills, month, today });
 }
