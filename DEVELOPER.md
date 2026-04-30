@@ -35,6 +35,7 @@ Comprehensive, mobile-first household finance application for multi-income famil
 | Variable | Required | Purpose |
 |---|---|---|
 | `ANTHROPIC_API_KEY` | Yes | PDF parsing, patterns, digest, debt insight — server-side only |
+| `EMAIL_WEBHOOK_SECRET` | Yes | Secret token in Zapier webhook URL — prevents unauthorized posts |
 | `ARGYLE_API_KEY_ID` | For Argyle sync | Argyle API key ID from console.argyle.com |
 | `ARGYLE_API_KEY_SECRET` | For Argyle sync | Argyle API key secret (shown once on creation) |
 | `ARGYLE_WEBHOOK_SECRET` | For Argyle sync | Secret for HMAC-SHA512 webhook signature verification |
@@ -257,6 +258,22 @@ Cached 6 days — only regenerated when stale or `?refresh=1` is passed.
 |---|---|---|
 | GET | `/api/w2/[userId]` | Settings + next payday countdown |
 | POST | `/api/w2/[userId]` | Update net, frequency, next_payday |
+
+### Email Webhook (Zapier Auto-Import)
+| Method | Path | Purpose |
+|---|---|---|
+| POST | `/api/webhooks/email?user_id=N&secret=X` | Zapier posts Uber email body → Claude parses → inserts run |
+
+**Zapier setup (per parent):**
+1. Trigger: Gmail → "New Email Matching Search" → filter: `from:uber subject:earnings`
+2. Action: Webhooks by Zapier → POST
+   - URL: `https://[domain]/api/webhooks/email?user_id=1&secret=[EMAIL_WEBHOOK_SECRET]`
+   - Payload type: JSON
+   - Body: `{ "body_text": "{{Body Plain}}" }`
+3. Repeat with `user_id=2` for Parent 2
+
+**Dedup:** runs with same `note` (date_range) are skipped — safe to re-trigger.
+**Secret:** rotate `EMAIL_WEBHOOK_SECRET` in `.env.local` if URL is ever exposed.
 
 ### Argyle (Gig Earnings Sync)
 | Method | Path | Purpose |
