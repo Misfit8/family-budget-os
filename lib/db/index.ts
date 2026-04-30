@@ -229,9 +229,27 @@ function initSchema(db: Database.Database) {
     );
   `);
 
+  // Argyle integration tables
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS argyle_users (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL UNIQUE,
+      argyle_user_id TEXT NOT NULL UNIQUE,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+    CREATE TABLE IF NOT EXISTS argyle_accounts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      argyle_account_id TEXT NOT NULL UNIQUE,
+      employer TEXT,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+  `);
+
   // Other migrations
   try { db.exec("ALTER TABLE runs ADD COLUMN note TEXT"); } catch { /* already exists */ }
   try { db.exec("ALTER TABLE shared_bills ADD COLUMN recurring_bill_id INTEGER"); } catch { /* already exists */ }
+  try { db.exec("ALTER TABLE runs ADD COLUMN argyle_gig_id TEXT"); } catch { /* already exists */ }
 
   // Seed default household
   const hCount = (db.prepare("SELECT COUNT(*) as c FROM households").get() as { c: number }).c;

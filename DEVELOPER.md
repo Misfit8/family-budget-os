@@ -35,6 +35,10 @@ Comprehensive, mobile-first household finance application for multi-income famil
 | Variable | Required | Purpose |
 |---|---|---|
 | `ANTHROPIC_API_KEY` | Yes | PDF parsing, patterns, digest, debt insight — server-side only |
+| `ARGYLE_API_KEY_ID` | For Argyle sync | Argyle API key ID from console.argyle.com |
+| `ARGYLE_API_KEY_SECRET` | For Argyle sync | Argyle API key secret (shown once on creation) |
+| `ARGYLE_WEBHOOK_SECRET` | For Argyle sync | Secret for HMAC-SHA512 webhook signature verification |
+| `ARGYLE_SANDBOX` | No | `"false"` = production, default = sandbox |
 
 ---
 
@@ -58,10 +62,24 @@ weekly_salary_target, created_at
 ```
 id, household_id, user_id, date, hours,
 earnings_gross, tips, miles, platform, uber_fee, net,
-note,  ← used as idempotency key for PDF import dedup
+note,          ← idempotency key for PDF import dedup
+argyle_gig_id, ← Argyle gig UUID for webhook upsert dedup
 created_at
 ```
 Index: `idx_runs_user_date`
+
+### argyle_users
+Maps app `user_id` → Argyle `user_id`. Created on first Link widget open.
+```
+id, user_id (UNIQUE), argyle_user_id (UNIQUE), created_at
+```
+
+### argyle_accounts
+Maps Argyle `account_id` → app `user_id`. Created on `onAccountConnected` callback.
+Required for webhook routing — webhook payload includes account_id, not user_id.
+```
+id, user_id, argyle_account_id (UNIQUE), employer, created_at
+```
 
 ### buffer (Cash reserves)
 ```
@@ -240,6 +258,13 @@ Cached 6 days — only regenerated when stale or `?refresh=1` is passed.
 | GET | `/api/w2/[userId]` | Settings + next payday countdown |
 | POST | `/api/w2/[userId]` | Update net, frequency, next_payday |
 
+### Argyle (Gig Earnings Sync)
+| Method | Path | Purpose |
+|---|---|---|
+| POST | `/api/argyle/user-token` | Create/get Argyle user + return fresh user token for Link widget |
+| POST | `/api/argyle/account-connected` | Save account_id→user_id mapping after Link widget success |
+| POST | `/api/webhooks/argyle` | Receive `gig.added`/`gig.updated` webhooks → upsert into runs |
+
 ### Hub & Bills
 | Method | Path | Purpose |
 |---|---|---|
@@ -345,6 +370,7 @@ app/components/
   GoalsSection.tsx           Goal form + list
   ThemeProvider.tsx          Dark/light mode wrapper
   HelpTip.tsx                Inline tooltip helper
+  ArgyleLink.tsx             Argyle Link widget (loads CDN script, fetches user token, opens widget)
 ```
 
 ---
@@ -376,6 +402,7 @@ app/components/
 - [x] Multi-household infrastructure
 
 ### Not Yet Built
+- [x] Argyle gig earnings sync (Link widget + webhooks)
 - [ ] Authentication
 - [ ] User roles/permissions
 - [ ] Bill splitting algorithm
