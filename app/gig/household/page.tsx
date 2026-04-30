@@ -46,26 +46,29 @@ function getMonday(): string {
   return monday.toISOString().slice(0, 10);
 }
 
-const WEEKLY_TARGET = 1600;
-
 export default function ParentsDashboard() {
   const [buf1, setBuf1] = useState<BufferData | null>(null);
   const [buf2, setBuf2] = useState<BufferData | null>(null);
   const [runs, setRuns] = useState<Run[]>([]);
   const [loading, setLoading] = useState(true);
+  const [weeklyTarget, setWeeklyTarget] = useState(1600);
+  const [editingTarget, setEditingTarget] = useState(false);
+  const [targetDraft, setTargetDraft] = useState("");
 
   const load = useCallback(async () => {
-    const [b1Res, b2Res, r1Res, r2Res] = await Promise.all([
+    const [b1Res, b2Res, r1Res, r2Res, u1Res] = await Promise.all([
       fetch("/api/buffer/1"),
       fetch("/api/buffer/2"),
       fetch("/api/runs/1"),
       fetch("/api/runs/2"),
+      fetch("/api/users/1"),
     ]);
-    const [b1, b2, r1, r2] = await Promise.all([
-      b1Res.json(), b2Res.json(), r1Res.json(), r2Res.json(),
+    const [b1, b2, r1, r2, u1] = await Promise.all([
+      b1Res.json(), b2Res.json(), r1Res.json(), r2Res.json(), u1Res.json(),
     ]);
     setBuf1(b1);
     setBuf2(b2);
+    if (u1.weekly_salary_target) setWeeklyTarget(u1.weekly_salary_target);
     const merged: Run[] = [
       ...r1.map((r: Run) => ({ ...r, user_id: 1 })),
       ...r2.map((r: Run) => ({ ...r, user_id: 2 })),
@@ -73,6 +76,18 @@ export default function ParentsDashboard() {
     setRuns(merged);
     setLoading(false);
   }, []);
+
+  async function saveTarget() {
+    const val = Number(targetDraft);
+    if (!targetDraft || isNaN(val) || val < 0) { setEditingTarget(false); return; }
+    setWeeklyTarget(val);
+    setEditingTarget(false);
+    await fetch("/api/users/1", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ weekly_salary_target: val }),
+    });
+  }
 
   useEffect(() => { load(); }, [load]);
 
@@ -90,7 +105,7 @@ export default function ParentsDashboard() {
 
   const cutoff = getMonday();
   const weekEarnings = runs.filter((r) => r.date >= cutoff).reduce((s, r) => s + r.net, 0);
-  const weekPct = Math.min(100, WEEKLY_TARGET > 0 ? (weekEarnings / WEEKLY_TARGET) * 100 : 0);
+  const weekPct = Math.min(100, weeklyTarget > 0 ? (weekEarnings / weeklyTarget) * 100 : 0);
 
   const trailCutoff = new Date();
   trailCutoff.setDate(trailCutoff.getDate() - 7);
@@ -152,8 +167,30 @@ export default function ParentsDashboard() {
             <p className="text-xs text-zinc-400 mt-0.5">earned after fees</p>
           </div>
           <div className="text-right">
-            <p className="text-lg font-semibold text-zinc-500">${WEEKLY_TARGET}</p>
-            <p className="text-xs text-zinc-400">weekly goal</p>
+            {editingTarget ? (
+              <div className="flex items-center gap-1 justify-end">
+                <span className="text-lg font-semibold text-zinc-500">$</span>
+                <input
+                  type="number"
+                  min="0"
+                  value={targetDraft}
+                  onChange={(e) => setTargetDraft(e.target.value)}
+                  onBlur={saveTarget}
+                  onKeyDown={(e) => { if (e.key === "Enter") saveTarget(); if (e.key === "Escape") setEditingTarget(false); }}
+                  className="w-24 border border-zinc-300 rounded-lg px-2 py-1 text-lg font-semibold text-zinc-500 text-right outline-none focus:border-zinc-500 bg-white"
+                  style={{ fontSize: "16px" }}
+                  autoFocus
+                />
+              </div>
+            ) : (
+              <button
+                onClick={() => { setTargetDraft(String(weeklyTarget)); setEditingTarget(true); }}
+                className="text-lg font-semibold text-zinc-500 hover:text-zinc-700"
+              >
+                ${weeklyTarget}
+              </button>
+            )}
+            <p className="text-xs text-zinc-400">weekly goal · tap to edit</p>
           </div>
         </div>
         <div className="mt-3 h-2 bg-zinc-100 rounded-full overflow-hidden">
@@ -164,9 +201,9 @@ export default function ParentsDashboard() {
         </div>
         <div className="flex justify-between mt-1.5">
           <span className="text-xs text-zinc-400">
-            {weekEarnings >= WEEKLY_TARGET
+            {weekEarnings >= weeklyTarget
               ? "🎉 Goal reached this week"
-              : `$${(WEEKLY_TARGET - weekEarnings).toFixed(0)} left to reach your goal`}
+              : `$${(weeklyTarget - weekEarnings).toFixed(0)} left to reach your goal`}
           </span>
           <span className="text-xs text-zinc-400">{Math.round(weekPct)}%</span>
         </div>
