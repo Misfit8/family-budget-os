@@ -69,7 +69,7 @@ export default function NotificationBanner({ userId }: { userId: string }) {
             </div>
             <button
               onClick={() => dismiss(n.id)}
-              className="text-zinc-300 hover:text-zinc-500 text-sm flex-shrink-0"
+              className="text-zinc-300 hover:text-zinc-500 text-sm flex-shrink-0 p-2 -m-2"
               aria-label="Dismiss"
             >
               ✕

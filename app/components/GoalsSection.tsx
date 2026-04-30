@@ -126,7 +126,7 @@ export default function GoalsSection({
         <p className="text-xs text-zinc-400 uppercase tracking-widest">Savings Goals</p>
         <button
           onClick={() => setShowForm(!showForm)}
-          className="text-xs text-zinc-500 border border-zinc-200 rounded-lg px-3 py-1 hover:border-zinc-400"
+          className="text-xs text-zinc-500 border border-zinc-200 rounded-lg px-3 py-2 hover:border-zinc-400"
         >
           {showForm ? "Cancel" : "+ Add"}
         </button>
@@ -199,7 +199,7 @@ export default function GoalsSection({
                     {projected ? ` · ${projected}` : ""}
                   </p>
                 </div>
-                <button onClick={() => handleDelete(g.id)} className="text-zinc-300 hover:text-red-400 text-xs">✕</button>
+                <button onClick={() => handleDelete(g.id)} className="text-zinc-300 hover:text-red-400 text-xs p-2 -m-2">✕</button>
               </div>
 
               <div className="h-2 bg-zinc-100 rounded-full overflow-hidden mb-3">
@@ -227,13 +227,13 @@ export default function GoalsSection({
                     onChange={(e) => setContribDate(e.target.value)}
                     className="input text-sm py-2"
                   />
-                  <button onClick={() => handleContribute(g.id)} className="bg-zinc-800 text-white rounded-lg px-3 text-sm">+</button>
-                  <button onClick={() => setContributing(null)} className="text-zinc-400 text-sm px-1">✕</button>
+                  <button onClick={() => handleContribute(g.id)} className="bg-zinc-800 text-white rounded-lg px-3 py-2.5 text-sm">+</button>
+                  <button onClick={() => setContributing(null)} className="text-zinc-400 text-sm p-2.5">✕</button>
                 </div>
               ) : (
                 <button
                   onClick={() => setContributing(g.id)}
-                  className="text-xs text-zinc-500 border border-zinc-200 rounded-lg px-3 py-1.5 w-full hover:border-zinc-400 transition-colors"
+                  className="text-xs text-zinc-500 border border-zinc-200 rounded-lg px-3 py-3 w-full hover:border-zinc-400 transition-colors"
                 >
                   + Contribute
                 </button>

@@ -256,7 +256,7 @@ export default function HubPage() {
         </div>
         <button
           onClick={() => setShowAddBill(!showAddBill)}
-          className="text-xs text-zinc-500 border border-zinc-200 rounded-lg px-3 py-1 hover:border-zinc-400"
+          className="text-xs text-zinc-500 border border-zinc-200 rounded-lg px-3 py-2 hover:border-zinc-400"
         >
           {showAddBill ? "Cancel" : "+ Add Bill"}
         </button>
@@ -378,7 +378,7 @@ export default function HubPage() {
                     <button
                       onClick={() => togglePaid(bill)}
                       title={bill.paid ? "Mark unpaid" : "Mark as paid"}
-                      className={`w-5 h-5 rounded-full border-2 flex-shrink-0 transition-colors ${
+                      className={`w-7 h-7 rounded-full border-2 flex-shrink-0 transition-colors ${
                         bill.paid ? "bg-emerald-500 border-emerald-500" : "border-zinc-300 hover:border-zinc-500"
                       }`}
                     />
@@ -399,7 +399,7 @@ export default function HubPage() {
                     <button
                       onClick={() => deleteBill(bill.id)}
                       title="Remove bill"
-                      className="text-zinc-300 hover:text-red-400 flex-shrink-0 p-1"
+                      className="text-zinc-300 hover:text-red-400 flex-shrink-0 p-2"
                     >
                       ✕
                     </button>
@@ -414,7 +414,7 @@ export default function HubPage() {
                           <button
                             key={String(opt.id)}
                             onClick={() => markPaid(bill.id, opt.id)}
-                            className={`text-xs px-3 py-1.5 rounded-lg border transition-colors ${
+                            className={`text-xs px-3 py-2.5 rounded-lg border transition-colors ${
                               opt.id === null
                                 ? "border-zinc-200 text-zinc-400 hover:border-zinc-400"
                                 : "border-zinc-300 text-zinc-700 bg-white hover:border-zinc-800 hover:bg-zinc-800 hover:text-white"
@@ -456,7 +456,7 @@ export default function HubPage() {
                   <button
                     onClick={() => cancelRecurring(t.id)}
                     title="Cancel recurring bill"
-                    className="text-zinc-300 hover:text-red-400 flex-shrink-0 p-1"
+                    className="text-zinc-300 hover:text-red-400 flex-shrink-0 p-2"
                   >
                     ✕
                   </button>

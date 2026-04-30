@@ -27,7 +27,7 @@ export default function HelpTip({ explanation }: HelpTipProps) {
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="ml-1.5 w-4 h-4 rounded-full bg-zinc-200 text-zinc-500 text-[10px] font-bold leading-none flex items-center justify-center hover:bg-zinc-300 transition-colors flex-shrink-0"
+        className="ml-1.5 w-6 h-6 rounded-full bg-zinc-200 text-zinc-500 text-xs font-bold leading-none flex items-center justify-center hover:bg-zinc-300 transition-colors flex-shrink-0"
         aria-label="What does this mean?"
       >
         ?
@@ -37,7 +37,7 @@ export default function HelpTip({ explanation }: HelpTipProps) {
           {explanation}
           <button
             onClick={() => setOpen(false)}
-            className="block mt-1.5 text-zinc-400 hover:text-zinc-600 text-[10px]"
+            className="block mt-2 w-full text-center text-zinc-400 hover:text-zinc-600 text-xs py-1.5"
           >
             Got it ✓
           </button>

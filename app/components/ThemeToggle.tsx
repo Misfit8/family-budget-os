@@ -21,7 +21,7 @@ export default function ThemeToggle() {
         <button
           key={o.value}
           onClick={() => setTheme(o.value)}
-          className={`flex-1 py-2 text-xs font-medium transition-colors ${
+          className={`flex-1 py-3 text-xs font-medium transition-colors ${
             theme === o.value
               ? "bg-zinc-800 text-white dark:bg-zinc-200 dark:text-zinc-900"
               : "bg-white text-zinc-500 hover:text-zinc-700 dark:bg-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200"
