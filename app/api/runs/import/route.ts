@@ -2,9 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import Anthropic from "@anthropic-ai/sdk";
 
-const client = new Anthropic({
-  defaultHeaders: { "anthropic-beta": "pdfs-2024-09-25" },
-});
+const client = new Anthropic();
 
 interface ParsedStatement {
   date_range: string;
@@ -133,6 +131,6 @@ No preamble. No markdown. JSON only.`,
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     console.error("[import/route]", msg);
-    return NextResponse.json({ error: msg }, { status: 500 });
+    return NextResponse.json({ error: `API error: ${msg}` }, { status: 500 });
   }
 }
