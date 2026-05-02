@@ -131,7 +131,8 @@ No preamble. No markdown. JSON only.`,
 
     return NextResponse.json({ error: "Provide pdf_base64 or rows" }, { status: 400 });
   } catch (e) {
-    console.error(e);
-    return NextResponse.json({ error: "Server error" }, { status: 500 });
+    const msg = e instanceof Error ? e.message : String(e);
+    console.error("[import/route]", msg);
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
