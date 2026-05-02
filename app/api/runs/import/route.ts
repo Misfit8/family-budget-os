@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import Anthropic from "@anthropic-ai/sdk";
 
-const client = new Anthropic();
+const client = new Anthropic({
+  defaultHeaders: { "anthropic-beta": "pdfs-2024-09-25" },
+});
 
 interface ParsedStatement {
   date_range: string;
