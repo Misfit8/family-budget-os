@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__ra-h__getContext",
+      "Bash(ls /c/Projects/family-budget-os/.env*)",
+      "Bash(npm run:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git pull:*)",
+      "mcp__ra-h__createNode",
+      "mcp__ra-h__createEdge",
+      "mcp__ra-h__getNodesById",
+      "mcp__ra-h__queryNodes",
+      "Bash(grep -r \"for.*const.*of\\\\|forEach\\\\|\\\\.map.*fetch\\\\|\\\\.map.*db\\\\.prepare\" C:/Projects/family-budget-os/app/api --include=*.ts)",
+      "mcp__ra-h__updateNode",
+      "Bash(git -C /c/Projects log --oneline --all -10)",
+      "Bash(git -C /c/Projects remote set-url origin https://github.com/Misfit8/grocery-tracker.git)",
+      "Bash(git -C /c/Projects remote -v)",
+      "Bash(py generate_icons.py)",
+      "Bash(git -C /c/Projects/grocery-tracker add templates/index.html templates/list.html templates/recipes.html templates/budget.html templates/pantry.html templates/history.html)",
+      "Bash(git -C:*)",
+      "Bash(grep -r \"pb-safe\\\\|safe-area-inset\\\\|fixed bottom\\\\|sticky bottom\" C:/Projects/family-budget-os/app --include=*.tsx --include=*.css)"
+    ]
+  }
+}

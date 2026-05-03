@@ -36,10 +36,6 @@ Comprehensive, mobile-first household finance application for multi-income famil
 |---|---|---|
 | `ANTHROPIC_API_KEY` | Yes | PDF parsing, patterns, digest, debt insight — server-side only |
 | `EMAIL_WEBHOOK_SECRET` | Yes | Secret token in Zapier webhook URL — prevents unauthorized posts |
-| `ARGYLE_API_KEY_ID` | For Argyle sync | Argyle API key ID from console.argyle.com |
-| `ARGYLE_API_KEY_SECRET` | For Argyle sync | Argyle API key secret (shown once on creation) |
-| `ARGYLE_WEBHOOK_SECRET` | For Argyle sync | Secret for HMAC-SHA512 webhook signature verification |
-| `ARGYLE_SANDBOX` | No | `"false"` = production, default = sandbox |
 
 ---
 
@@ -64,23 +60,9 @@ weekly_salary_target, created_at
 id, household_id, user_id, date, hours,
 earnings_gross, tips, miles, platform, uber_fee, net,
 note,          ← idempotency key for PDF import dedup
-argyle_gig_id, ← Argyle gig UUID for webhook upsert dedup
 created_at
 ```
 Index: `idx_runs_user_date`
-
-### argyle_users
-Maps app `user_id` → Argyle `user_id`. Created on first Link widget open.
-```
-id, user_id (UNIQUE), argyle_user_id (UNIQUE), created_at
-```
-
-### argyle_accounts
-Maps Argyle `account_id` → app `user_id`. Created on `onAccountConnected` callback.
-Required for webhook routing — webhook payload includes account_id, not user_id.
-```
-id, user_id, argyle_account_id (UNIQUE), employer, created_at
-```
 
 ### buffer (Cash reserves)
 ```
@@ -93,7 +75,9 @@ Indexes: `idx_buffer_user`, `idx_buffer_user_type_date`
 ### shared_bills
 ```
 id, household_id, name, amount, due_date,
-paid_by_user_id, month, paid: 0|1
+paid_by_user_id, month, paid: 0|1,
+recurring_bill_id,  ← links to recurring_bills template (NULL for one-time bills)
+skipped: 0|1        ← 1 = user removed this month's instance; syncRecurringBills won't recreate it
 ```
 
 ### tax_tracker
@@ -275,13 +259,6 @@ Cached 6 days — only regenerated when stale or `?refresh=1` is passed.
 **Dedup:** runs with same `note` (date_range) are skipped — safe to re-trigger.
 **Secret:** rotate `EMAIL_WEBHOOK_SECRET` in `.env.local` if URL is ever exposed.
 
-### Argyle (Gig Earnings Sync)
-| Method | Path | Purpose |
-|---|---|---|
-| POST | `/api/argyle/user-token` | Create/get Argyle user + return fresh user token for Link widget |
-| POST | `/api/argyle/account-connected` | Save account_id→user_id mapping after Link widget success |
-| POST | `/api/webhooks/argyle` | Receive `gig.added`/`gig.updated` webhooks → upsert into runs |
-
 ### Hub & Bills
 | Method | Path | Purpose |
 |---|---|---|
@@ -387,7 +364,6 @@ app/components/
   GoalsSection.tsx           Goal form + list
   ThemeProvider.tsx          Dark/light mode wrapper
   HelpTip.tsx                Inline tooltip helper
-  ArgyleLink.tsx             Argyle Link widget (loads CDN script, fetches user token, opens widget)
 ```
 
 ---
@@ -419,7 +395,6 @@ app/components/
 - [x] Multi-household infrastructure
 
 ### Not Yet Built
-- [x] Argyle gig earnings sync (Link widget + webhooks)
 - [ ] Authentication
 - [ ] User roles/permissions
 - [ ] Bill splitting algorithm

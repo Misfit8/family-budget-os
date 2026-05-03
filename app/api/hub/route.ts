@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
 
   // Shared bills this month
   const bills = db
-    .prepare("SELECT * FROM shared_bills WHERE month = ? ORDER BY due_date ASC")
+    .prepare("SELECT * FROM shared_bills WHERE month = ? AND (skipped IS NULL OR skipped = 0) ORDER BY due_date ASC")
     .all(month) as {
       id: number; name: string; amount: number; due_date: string;
       paid_by_user_id: number | null; paid: number; recurring_bill_id: number | null;

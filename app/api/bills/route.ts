@@ -11,12 +11,17 @@ export async function POST(req: NextRequest) {
     const db = getDb();
     const m = month ?? new Date().toISOString().slice(0, 7);
 
-    // Recurring bill — insert template then sync to generate instances
+    // Recurring bill — insert template then sync current + next 11 months
     if (frequency && frequency !== "once" && due_day != null) {
       const result = db
         .prepare("INSERT INTO recurring_bills (name, amount, frequency, due_day) VALUES (?, ?, ?, ?)")
         .run(name, amount, frequency, due_day);
-      syncRecurringBills(db, m);
+      const [y, mo] = m.split("-").map(Number);
+      for (let i = 0; i < 12; i++) {
+        const d = new Date(y, mo - 1 + i, 1);
+        const target = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+        syncRecurringBills(db, target);
+      }
       return NextResponse.json({ id: result.lastInsertRowid }, { status: 201 });
     }
 

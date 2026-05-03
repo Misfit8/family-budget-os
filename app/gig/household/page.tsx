@@ -5,7 +5,6 @@ import Link from "next/link";
 import NotificationBanner from "@/app/components/NotificationBanner";
 import GoalsSection from "@/app/components/GoalsSection";
 import HelpTip from "@/app/components/HelpTip";
-import ArgyleLink from "@/app/components/ArgyleLink";
 
 interface BufferData {
   balance: number;
@@ -249,16 +248,6 @@ export default function ParentsDashboard() {
           className="col-span-2 bg-white border border-zinc-200 text-zinc-700 rounded-xl py-3 text-center text-sm font-medium hover:border-zinc-400 transition-colors">
           Debt Freedom
         </Link>
-      </div>
-
-      {/* Argyle account sync */}
-      <div className="mb-6">
-        <p className="text-xs text-zinc-400 uppercase tracking-widest mb-3">Account Sync</p>
-        <div className="flex flex-col gap-2">
-          <ArgyleLink userId={1} label="Link Parent 1 Uber Account" />
-          <ArgyleLink userId={2} label="Link Parent 2 Uber Account" />
-        </div>
-        <p className="text-xs text-zinc-400 mt-2">Link once — earnings sync automatically after each delivery.</p>
       </div>
 
       <GoalsSection userId="1" incomeType="gig" />
