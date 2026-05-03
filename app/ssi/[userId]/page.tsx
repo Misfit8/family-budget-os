@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import NotificationBanner from "@/app/components/NotificationBanner";
 import GoalsSection from "@/app/components/GoalsSection";
+import BankAccountsSection from "@/app/components/BankAccountsSection";
 import HelpTip from "@/app/components/HelpTip";
 
 interface SSIData {
@@ -149,6 +150,7 @@ export default function SSIDashboard() {
       </div>
 
       <GoalsSection userId={userId} incomeType="ssi" />
+      <BankAccountsSection userId={userId} />
     </div>
   );
 }

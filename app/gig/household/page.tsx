@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import NotificationBanner from "@/app/components/NotificationBanner";
 import GoalsSection from "@/app/components/GoalsSection";
+import BankAccountsSection from "@/app/components/BankAccountsSection";
 import HelpTip from "@/app/components/HelpTip";
 
 interface BufferData {
@@ -255,6 +256,8 @@ export default function ParentsDashboard() {
       </div>
 
       <GoalsSection userId="1" incomeType="gig" />
+      <BankAccountsSection userId={1} />
+      <BankAccountsSection userId={2} />
 
       {/* Recent runs */}
       <div className="mt-6">

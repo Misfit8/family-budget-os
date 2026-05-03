@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import NotificationBanner from "@/app/components/NotificationBanner";
 import GoalsSection from "@/app/components/GoalsSection";
+import BankAccountsSection from "@/app/components/BankAccountsSection";
 import HelpTip from "@/app/components/HelpTip";
 
 interface Paycheck {
@@ -340,6 +341,7 @@ export default function W2Dashboard() {
           </div>
 
           <GoalsSection userId={userId} incomeType="w2" />
+          <BankAccountsSection userId={userId} />
         </>
       )}
 
