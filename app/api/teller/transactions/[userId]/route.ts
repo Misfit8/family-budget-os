@@ -26,16 +26,14 @@ export async function GET(
         amount: number; type: string; category: string | null; account_id: string;
       }[];
 
-    const credits = transactions.filter((t) => t.type === "credit");
-    const debits = transactions.filter((t) => t.type === "debit");
-    const totalIn = credits.reduce((s, t) => s + t.amount, 0);
-    const totalOut = debits.reduce((s, t) => s + t.amount, 0);
+    // Teller uses signed amounts: positive = money in, negative = money out
+    const totalIn = transactions.filter((t) => t.amount > 0).reduce((s, t) => s + t.amount, 0);
+    const totalOut = transactions.filter((t) => t.amount < 0).reduce((s, t) => s + Math.abs(t.amount), 0);
 
-    // Group debits by category
     const byCategory: Record<string, number> = {};
-    for (const t of debits) {
+    for (const t of transactions.filter((t) => t.amount < 0)) {
       const cat = t.category ?? "other";
-      byCategory[cat] = (byCategory[cat] ?? 0) + t.amount;
+      byCategory[cat] = (byCategory[cat] ?? 0) + Math.abs(t.amount);
     }
 
     return NextResponse.json({ transactions, totalIn, totalOut, byCategory, month });

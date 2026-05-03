@@ -298,8 +298,8 @@ export default function BankAccountsSection({ userId, label }: Props) {
                       {txn.date}{txn.category ? ` · ${txn.category.replace(/_/g, " ")}` : ""}
                     </p>
                   </div>
-                  <p className={`text-sm font-semibold flex-shrink-0 ${txn.type === "credit" ? "text-emerald-600" : "text-zinc-700"}`}>
-                    {txn.type === "credit" ? "+" : "-"}${txn.amount.toFixed(2)}
+                  <p className={`text-sm font-semibold flex-shrink-0 ${txn.amount > 0 ? "text-emerald-600" : "text-zinc-700"}`}>
+                    {txn.amount > 0 ? "+" : ""}${txn.amount.toFixed(2)}
                   </p>
                 </div>
               ))}
