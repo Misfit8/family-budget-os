@@ -145,16 +145,6 @@ export default function Home() {
           <MemberCard key={u.id} user={u} onRenamed={handleRenamed} />
         ))}
 
-        <Link
-          href="/accounts"
-          className="flex items-center gap-4 bg-white border border-zinc-200 rounded-xl px-5 py-4 text-zinc-800 font-medium hover:border-zinc-400 transition-colors"
-        >
-          <div>
-            <div className="font-semibold">Accounts</div>
-            <div className="text-xs text-zinc-400 mt-0.5">Linked banks · money in & out</div>
-          </div>
-        </Link>
-
         <div className="border-t border-zinc-200 my-1" />
 
         <Link

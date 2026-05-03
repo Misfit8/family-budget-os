@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import Link from "next/link";
+import TellerConnect from "@/app/components/TellerConnect";
 
 interface TellerAccount {
   account_id: string;
@@ -50,6 +50,7 @@ export default function BankAccountsSection({ userId, label }: Props) {
   const today = new Date().toISOString().slice(0, 7);
   const [accounts, setAccounts] = useState<TellerAccount[]>([]);
   const [loading, setLoading] = useState(true);
+  const [syncing, setSyncing] = useState(false);
 
   // Transactions panel
   const [showTxns, setShowTxns] = useState(false);
@@ -63,12 +64,22 @@ export default function BankAccountsSection({ userId, label }: Props) {
   const [trendsLoading, setTrendsLoading] = useState(false);
   const [trendsLoaded, setTrendsLoaded] = useState(false);
 
-  useEffect(() => {
+  const loadAccounts = useCallback(() => {
     fetch(`/api/teller/accounts/${userId}`)
       .then((r) => r.json())
       .then((data) => { setAccounts(data.accounts ?? []); setLoading(false); })
       .catch(() => setLoading(false));
   }, [userId]);
+
+  useEffect(() => { loadAccounts(); }, [loadAccounts]);
+
+  async function sync() {
+    setSyncing(true);
+    await fetch(`/api/teller/sync/${userId}`, { method: "POST" });
+    setSyncing(false);
+    loadAccounts();
+    setTrendsLoaded(false);
+  }
 
   const loadTransactions = useCallback(async (month: string) => {
     setTxnLoading(true);
@@ -121,9 +132,7 @@ export default function BankAccountsSection({ userId, label }: Props) {
     return (
       <div className="mt-6">
         <p className="text-xs text-zinc-400 uppercase tracking-widest mb-3">{label ?? "Bank Accounts"}</p>
-        <Link href="/accounts" className="block bg-white rounded-xl border border-zinc-200 px-4 py-3 text-sm text-zinc-400 hover:border-zinc-400 transition-colors">
-          No accounts linked — tap to link →
-        </Link>
+        <TellerConnect userId={Number(userId)} label="Link Bank Account" onConnected={() => { loadAccounts(); sync(); }} />
       </div>
     );
   }
@@ -152,7 +161,13 @@ export default function BankAccountsSection({ userId, label }: Props) {
     <div className="mt-6">
       <div className="flex items-center justify-between mb-3">
         <p className="text-xs text-zinc-400 uppercase tracking-widest">{label ?? "Bank Accounts"}</p>
-        <Link href="/accounts" className="text-xs text-zinc-400 hover:text-zinc-600">Manage →</Link>
+        <button
+          onClick={sync}
+          disabled={syncing}
+          className="text-xs text-zinc-500 border border-zinc-200 rounded-lg px-3 py-1.5 hover:border-zinc-400 disabled:opacity-50"
+        >
+          {syncing ? "Syncing…" : "Sync Now"}
+        </button>
       </div>
 
       {/* Total balance — large panel */}
@@ -177,6 +192,11 @@ export default function BankAccountsSection({ userId, label }: Props) {
             {accounts[0].institution} · {accounts[0].account_name} •••• {accounts[0].last_four}
           </p>
         )}
+      </div>
+
+      {/* Link additional account */}
+      <div className="mb-3">
+        <TellerConnect userId={Number(userId)} label="+ Link Another Account" onConnected={() => { loadAccounts(); sync(); }} />
       </div>
 
       {/* Trends panel */}
