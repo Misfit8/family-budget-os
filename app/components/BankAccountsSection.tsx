@@ -72,10 +72,16 @@ export default function BankAccountsSection({ userId, label }: Props) {
 
   const loadTransactions = useCallback(async (month: string) => {
     setTxnLoading(true);
-    const res = await fetch(`/api/teller/transactions/${userId}?month=${month}`);
-    const data = await res.json();
-    setTransactions(data.transactions ?? []);
-    setTxnLoading(false);
+    try {
+      const res = await fetch(`/api/teller/transactions/${userId}?month=${month}`);
+      const data = await res.json();
+      setTransactions(data.transactions ?? []);
+    } catch (e) {
+      console.error("Transactions load failed:", e);
+      setTransactions([]);
+    } finally {
+      setTxnLoading(false);
+    }
   }, [userId]);
 
   useEffect(() => {
@@ -85,17 +91,23 @@ export default function BankAccountsSection({ userId, label }: Props) {
   async function loadTrends() {
     if (trendsLoaded) return;
     setTrendsLoading(true);
-    const months = Array.from({ length: 6 }, (_, i) => offsetMonth(today, -i)).reverse();
-    const results = await Promise.all(
-      months.map((m) =>
-        fetch(`/api/teller/transactions/${userId}?month=${m}`)
-          .then((r) => r.json())
-          .then((d) => ({ month: m, totalIn: d.totalIn ?? 0, totalOut: d.totalOut ?? 0, byCategory: d.byCategory ?? {} } as MonthSummary))
-      )
-    );
-    setTrends(results);
-    setTrendsLoading(false);
-    setTrendsLoaded(true);
+    try {
+      const months = Array.from({ length: 6 }, (_, i) => offsetMonth(today, -i)).reverse();
+      const results = await Promise.all(
+        months.map((m) =>
+          fetch(`/api/teller/transactions/${userId}?month=${m}`)
+            .then((r) => r.json())
+            .then((d) => ({ month: m, totalIn: d.totalIn ?? 0, totalOut: d.totalOut ?? 0, byCategory: d.byCategory ?? {} } as MonthSummary))
+            .catch(() => ({ month: m, totalIn: 0, totalOut: 0, byCategory: {} } as MonthSummary))
+        )
+      );
+      setTrends(results);
+    } catch (e) {
+      console.error("Trends load failed:", e);
+    } finally {
+      setTrendsLoading(false);
+      setTrendsLoaded(true);
+    }
   }
 
   function toggleTrends() {
