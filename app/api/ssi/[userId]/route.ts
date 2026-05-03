@@ -11,14 +11,12 @@ export async function GET(
 
   const assets = db
     .prepare("SELECT * FROM ssi_assets WHERE user_id = ?")
-    .get(uid) as { countable_assets: number; able_account: number; updated_at: string } | undefined;
+    .get(uid) as { countable_assets: number; updated_at: string } | undefined;
 
   const countable = assets?.countable_assets ?? 0;
-  const able = assets?.able_account ?? 0;
   const limit = 2000;
   const remaining = Math.max(0, limit - countable);
 
-  // Status thresholds per notification spec
   const status =
     countable >= 2000 ? "crisis" :
     countable >= 1800 ? "red" :
@@ -27,7 +25,6 @@ export async function GET(
 
   return NextResponse.json({
     countable_assets: countable,
-    able_account: able,
     limit,
     remaining,
     status,

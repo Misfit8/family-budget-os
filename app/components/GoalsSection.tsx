@@ -10,7 +10,6 @@ interface Goal {
   current_amount: number;
   monthly_contribution: number;
   is_family_goal: number;
-  is_able: number;
   deadline: string | null;
   status: string;
 }
@@ -40,7 +39,6 @@ export default function GoalsSection({
   const [monthly, setMonthly] = useState("");
   const [deadline, setDeadline] = useState("");
   const [isFamilyGoal, setIsFamilyGoal] = useState(false);
-  const [isAble, setIsAble] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const load = useCallback(async () => {
@@ -67,13 +65,12 @@ export default function GoalsSection({
         monthly_contribution: Number(monthly) || 0,
         deadline: deadline || null,
         is_family_goal: isFamilyGoal,
-        is_able: isAble,
       }),
     });
     setSaving(false);
     setShowForm(false);
     setName(""); setTarget(""); setMonthly(""); setDeadline("");
-    setIsFamilyGoal(false); setIsAble(false);
+    setIsFamilyGoal(false);
     load();
   }
 
@@ -98,11 +95,10 @@ export default function GoalsSection({
     load();
   }
 
-  // SSI guard: warn if adding a non-ABLE goal would push countable assets toward limit
   function ssiWarning(targetAmt: number): string | null {
-    if (incomeType !== "ssi" || isAble || !ssiData) return null;
+    if (incomeType !== "ssi" || !ssiData) return null;
     const projected = ssiData.countable_assets + targetAmt;
-    if (projected >= 1800) return "This goal may push your countable assets near the SSI limit. Consider using an ABLE account instead. This is not legal advice.";
+    if (projected >= 1800) return "This goal may push your countable assets near the SSI limit. This is not legal advice.";
     if (projected >= 1500) return "Combined with your current assets, this goal approaches the SSI limit. This is not legal advice.";
     return null;
   }
@@ -151,12 +147,6 @@ export default function GoalsSection({
               <input type="checkbox" checked={isFamilyGoal} onChange={(e) => setIsFamilyGoal(e.target.checked)} />
               Family goal
             </label>
-            {incomeType === "ssi" && (
-              <label className="flex items-center gap-2 text-sm text-zinc-600 cursor-pointer">
-                <input type="checkbox" checked={isAble} onChange={(e) => setIsAble(e.target.checked)} />
-                ABLE account
-              </label>
-            )}
           </div>
 
           {liveWarning && (
@@ -189,9 +179,6 @@ export default function GoalsSection({
                     <p className="text-sm font-semibold text-zinc-800">{g.name}</p>
                     {g.is_family_goal === 1 && (
                       <span className="text-xs bg-zinc-100 text-zinc-500 px-1.5 py-0.5 rounded">family</span>
-                    )}
-                    {g.is_able === 1 && (
-                      <span className="text-xs bg-blue-50 text-blue-500 px-1.5 py-0.5 rounded">ABLE</span>
                     )}
                   </div>
                   <p className="text-xs text-zinc-400 mt-0.5">

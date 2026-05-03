@@ -122,7 +122,7 @@ export function checkAndCreateAlerts(userId: number) {
         user_id: userId,
         type: "ASSET_RED",
         title: `Assets at $${countable.toFixed(0)} — near SSI limit`,
-        body: "Consider an ABLE account for new savings. Contact a benefits counselor. This is not legal advice.",
+        body: "Your savings are near the SSI limit. Contact a benefits counselor. This is not legal advice.",
         action_url: `/ssi/${userId}/assets`,
       });
     } else if (countable >= 1500) {

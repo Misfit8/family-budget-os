@@ -9,7 +9,6 @@ export default function AssetsPage() {
   const router = useRouter();
 
   const [countable, setCountable] = useState("");
-  const [able, setAble] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -18,7 +17,6 @@ export default function AssetsPage() {
       .then((r) => r.json())
       .then((d) => {
         setCountable(String(d.countable_assets));
-        setAble(String(d.able_account));
       });
   }, [userId]);
 
@@ -42,18 +40,15 @@ export default function AssetsPage() {
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
-    if (liveCountable < 0 || Number(able) < 0) {
-      setError("Amounts must be 0 or more.");
+    if (liveCountable < 0) {
+      setError("Amount must be 0 or more.");
       return;
     }
     setSaving(true);
     const res = await fetch(`/api/ssi/${userId}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        countable_assets: liveCountable,
-        able_account: Number(able) || 0,
-      }),
+      body: JSON.stringify({ countable_assets: liveCountable }),
     });
     setSaving(false);
     if (res.ok) {
@@ -104,24 +99,6 @@ export default function AssetsPage() {
             min="0"
             value={countable}
             onChange={(e) => setCountable(e.target.value)}
-            className="input"
-            placeholder="0.00"
-          />
-        </div>
-
-        <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-zinc-500 uppercase tracking-wide">
-            ABLE Account Balance ($)
-          </label>
-          <p className="text-xs text-zinc-400 mb-1">
-            ABLE accounts are excluded from the SSI $2,000 countable asset limit (up to $100,000).
-          </p>
-          <input
-            type="number"
-            step="0.01"
-            min="0"
-            value={able}
-            onChange={(e) => setAble(e.target.value)}
             className="input"
             placeholder="0.00"
           />

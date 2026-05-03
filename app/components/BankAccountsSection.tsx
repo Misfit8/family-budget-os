@@ -194,30 +194,69 @@ export default function BankAccountsSection({ userId, label }: Props) {
             <p className="text-xs text-zinc-400 text-center py-2">Loading…</p>
           ) : (
             <>
-              {/* Averages */}
-              <div className="grid grid-cols-2 gap-3 mb-5">
+              {/* Summary cards */}
+              <div className="grid grid-cols-3 gap-2 mb-5">
                 <div className="bg-emerald-50 rounded-xl p-3 text-center">
-                  <p className="text-xs text-zinc-400 mb-1">Avg monthly in</p>
-                  <p className="text-lg font-bold text-emerald-600">${avgIn.toFixed(0)}</p>
+                  <p className="text-xs text-zinc-400 mb-1">Avg in</p>
+                  <p className="text-base font-bold text-emerald-600">${avgIn.toFixed(0)}</p>
                 </div>
                 <div className="bg-red-50 rounded-xl p-3 text-center">
-                  <p className="text-xs text-zinc-400 mb-1">Avg monthly out</p>
-                  <p className="text-lg font-bold text-red-500">${avgOut.toFixed(0)}</p>
+                  <p className="text-xs text-zinc-400 mb-1">Avg out</p>
+                  <p className="text-base font-bold text-red-500">${avgOut.toFixed(0)}</p>
+                </div>
+                <div className={`rounded-xl p-3 text-center ${avgIn > avgOut ? "bg-emerald-50" : "bg-zinc-50"}`}>
+                  <p className="text-xs text-zinc-400 mb-1">Savings rate</p>
+                  <p className={`text-base font-bold ${avgIn > 0 && avgIn > avgOut ? "text-emerald-600" : "text-zinc-500"}`}>
+                    {avgIn > 0 ? `${Math.round(((avgIn - avgOut) / avgIn) * 100)}%` : "—"}
+                  </p>
                 </div>
               </div>
 
-              {/* Month-by-month bars */}
-              <p className="text-xs text-zinc-400 mb-3">Last 6 months</p>
+              {/* Where money goes — category % breakdown */}
+              {topCats.length > 0 && (
+                <div className="mb-5">
+                  <p className="text-xs text-zinc-400 mb-3">Where money goes (avg/mo)</p>
+                  <div className="flex flex-col gap-2">
+                    {topCats.map(({ cat, avg }) => {
+                      const pct = avgOut > 0 ? Math.round((avg / avgOut) * 100) : 0;
+                      return (
+                        <div key={cat}>
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-xs text-zinc-600 capitalize">{cat.replace(/_/g, " ")}</span>
+                            <span className="text-xs font-medium text-zinc-700">${avg.toFixed(0)}/mo · {pct}%</span>
+                          </div>
+                          <div className="h-1.5 bg-zinc-100 rounded-full overflow-hidden">
+                            <div className="h-full bg-zinc-400 rounded-full" style={{ width: `${pct}%` }} />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Month-by-month */}
+              <p className="text-xs text-zinc-400 mb-3">Month by month</p>
               <div className="flex flex-col gap-3">
-                {trends.map((t) => {
+                {trends.map((t, i) => {
                   const net = t.totalIn - t.totalOut;
+                  const savingsRate = t.totalIn > 0 ? Math.round((net / t.totalIn) * 100) : 0;
+                  const prev = trends[i - 1];
+                  const momDelta = prev && prev.totalOut > 0 ? Math.round(((t.totalOut - prev.totalOut) / prev.totalOut) * 100) : null;
                   return (
                     <div key={t.month}>
                       <div className="flex items-center justify-between mb-1">
                         <span className="text-xs text-zinc-500">{formatMonthLabel(t.month)}</span>
-                        <span className={`text-xs font-semibold ${net >= 0 ? "text-emerald-600" : "text-red-500"}`}>
-                          {net >= 0 ? "+" : ""}${net.toFixed(0)}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          {momDelta !== null && (
+                            <span className={`text-xs ${momDelta > 5 ? "text-red-400" : momDelta < -5 ? "text-emerald-500" : "text-zinc-400"}`}>
+                              {momDelta > 0 ? "▲" : "▼"}{Math.abs(momDelta)}% spend
+                            </span>
+                          )}
+                          <span className={`text-xs font-semibold ${net >= 0 ? "text-emerald-600" : "text-red-500"}`}>
+                            {net >= 0 ? "+" : ""}${net.toFixed(0)}
+                          </span>
+                        </div>
                       </div>
                       <div className="flex flex-col gap-1">
                         <div className="flex items-center gap-2">
@@ -235,25 +274,13 @@ export default function BankAccountsSection({ userId, label }: Props) {
                           <span className="text-xs text-zinc-500 w-14 text-right">${t.totalOut.toFixed(0)}</span>
                         </div>
                       </div>
+                      {t.totalIn > 0 && (
+                        <p className="text-xs text-zinc-400 mt-1 text-right">saved {savingsRate}%</p>
+                      )}
                     </div>
                   );
                 })}
               </div>
-
-              {/* Top categories */}
-              {topCats.length > 0 && (
-                <div className="mt-5 pt-4 border-t border-zinc-100">
-                  <p className="text-xs text-zinc-400 mb-3">Avg monthly spend by category</p>
-                  <div className="flex flex-col gap-2">
-                    {topCats.map(({ cat, avg }) => (
-                      <div key={cat} className="flex items-center justify-between">
-                        <span className="text-xs text-zinc-600 capitalize">{cat.replace(/_/g, " ")}</span>
-                        <span className="text-xs font-medium text-zinc-700">${avg.toFixed(0)}/mo</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
             </>
           )}
         </div>

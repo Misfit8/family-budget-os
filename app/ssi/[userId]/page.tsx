@@ -10,7 +10,6 @@ import HelpTip from "@/app/components/HelpTip";
 
 interface SSIData {
   countable_assets: number;
-  able_account: number;
   limit: number;
   remaining: number;
   status: "green" | "amber" | "red" | "crisis";
@@ -26,8 +25,8 @@ const STATUS_CONFIG = {
 
 const STATUS_MSG = {
   green:  null,
-  amber:  "Your savings are approaching the SSI limit. Avoid adding to regular savings right now.",
-  red:    "Your savings are close to the SSI limit. Consider using an ABLE account for new savings. This is not legal advice.",
+  amber:  "Your savings are approaching the SSI limit. Avoid adding to regular savings right now. This is not legal advice.",
+  red:    "Your savings are close to the SSI limit. This is not legal advice.",
   crisis: "Your savings have reached or exceeded the SSI limit. Contact SSA immediately. This is not legal advice.",
 };
 
@@ -113,16 +112,6 @@ export default function SSIDashboard() {
           {msg}
         </div>
       )}
-
-      {/* ABLE account */}
-      <div className="bg-white rounded-2xl border border-zinc-200 p-5 mb-4">
-        <div className="flex items-center gap-1 mb-1">
-          <p className="text-xs text-zinc-400 uppercase tracking-widest">ABLE Account</p>
-          <HelpTip explanation="A special savings account for people with disabilities. Money here does NOT count toward your $2,000 SSI limit. You can save up to $100,000 in an ABLE account. This is not legal advice." />
-        </div>
-        <p className="text-2xl font-bold text-zinc-800">${data.able_account.toFixed(2)}</p>
-        <p className="text-xs text-zinc-400 mt-1">Doesn't count toward your SSI limit</p>
-      </div>
 
       {/* Next payment */}
       <div className="bg-white rounded-2xl border border-zinc-200 p-5 mb-6">
