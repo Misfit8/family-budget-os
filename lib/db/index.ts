@@ -229,6 +229,45 @@ function initSchema(db: Database.Database) {
     );
   `);
 
+  // Teller bank linking
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS teller_enrollments (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      household_id INTEGER NOT NULL DEFAULT 1,
+      user_id INTEGER NOT NULL,
+      enrollment_id TEXT NOT NULL UNIQUE,
+      access_token TEXT NOT NULL,
+      institution TEXT,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+    CREATE TABLE IF NOT EXISTS teller_accounts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      household_id INTEGER NOT NULL DEFAULT 1,
+      user_id INTEGER NOT NULL,
+      enrollment_id TEXT NOT NULL,
+      account_id TEXT NOT NULL UNIQUE,
+      account_name TEXT,
+      account_type TEXT,
+      account_subtype TEXT,
+      last_four TEXT,
+      institution TEXT,
+      last_synced TEXT
+    );
+    CREATE TABLE IF NOT EXISTS teller_transactions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      household_id INTEGER NOT NULL DEFAULT 1,
+      user_id INTEGER NOT NULL,
+      account_id TEXT NOT NULL,
+      transaction_id TEXT NOT NULL UNIQUE,
+      date TEXT NOT NULL,
+      description TEXT,
+      amount REAL NOT NULL,
+      type TEXT,
+      status TEXT,
+      category TEXT
+    );
+  `);
+
   // Other migrations
   try { db.exec("ALTER TABLE runs ADD COLUMN note TEXT"); } catch { /* already exists */ }
   try { db.exec("ALTER TABLE shared_bills ADD COLUMN recurring_bill_id INTEGER"); } catch { /* already exists */ }

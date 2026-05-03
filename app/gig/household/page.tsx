@@ -245,8 +245,12 @@ export default function ParentsDashboard() {
           Patterns ✦
         </Link>
         <Link href="/debt/1"
-          className="col-span-2 bg-white border border-zinc-200 text-zinc-700 rounded-xl py-3 text-center text-sm font-medium hover:border-zinc-400 transition-colors">
+          className="bg-white border border-zinc-200 text-zinc-700 rounded-xl py-3 text-center text-sm font-medium hover:border-zinc-400 transition-colors">
           Debt Freedom
+        </Link>
+        <Link href="/accounts"
+          className="bg-white border border-zinc-200 text-zinc-700 rounded-xl py-3 text-center text-sm font-medium hover:border-zinc-400 transition-colors">
+          Accounts
         </Link>
       </div>
 

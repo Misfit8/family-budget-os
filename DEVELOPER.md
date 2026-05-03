@@ -36,6 +36,13 @@ Comprehensive, mobile-first household finance application for multi-income famil
 |---|---|---|
 | `ANTHROPIC_API_KEY` | Yes | PDF parsing, patterns, digest, debt insight — server-side only |
 | `EMAIL_WEBHOOK_SECRET` | Yes | Secret token in Zapier webhook URL — prevents unauthorized posts |
+| `NEXT_PUBLIC_TELLER_APP_ID` | Yes | Teller app ID — passed to TellerConnect widget on client |
+| `TELLER_CERT_PATH` | Yes* | Path to Teller certificate.pem (mTLS) |
+| `TELLER_KEY_PATH` | Yes* | Path to Teller private_key.pem (mTLS) |
+| `TELLER_CERT` | Yes* | Inline PEM cert string (Railway alternative to path) |
+| `TELLER_KEY` | Yes* | Inline PEM key string (Railway alternative to path) |
+
+*One of path or inline required for Teller API calls to work.
 
 ---
 
@@ -146,6 +153,26 @@ generated_at, dismissed: 0|1
 Index: `idx_digests_user`
 Cached 6 days — only regenerated when stale or `?refresh=1` is passed.
 
+### teller_enrollments
+One row per linked bank connection. Access token used for all Teller API calls for that institution.
+```
+id, household_id, user_id, enrollment_id (UNIQUE), access_token, institution, created_at
+```
+
+### teller_accounts
+One row per bank account within an enrollment.
+```
+id, household_id, user_id, enrollment_id, account_id (UNIQUE),
+account_name, account_type, account_subtype, last_four, institution, last_synced
+```
+
+### teller_transactions
+Posted transactions only. `amount` always positive; `type: credit|debit` gives direction.
+```
+id, household_id, user_id, account_id, transaction_id (UNIQUE),
+date, description, amount, type, status, category
+```
+
 ---
 
 ## Pages & Routes
@@ -181,6 +208,7 @@ Cached 6 days — only regenerated when stale or `?refresh=1` is passed.
 | Route | Purpose |
 |---|---|
 | `GET /hub` | Household overview: runway, per-member status cards, shared bills |
+| `GET /accounts` | Linked bank accounts: connect via Teller, Money In/Out by month, transaction list |
 
 ### Debt Freedom (all users)
 | Route | Purpose |
@@ -258,6 +286,19 @@ Cached 6 days — only regenerated when stale or `?refresh=1` is passed.
 
 **Dedup:** runs with same `note` (date_range) are skipped — safe to re-trigger.
 **Secret:** rotate `EMAIL_WEBHOOK_SECRET` in `.env.local` if URL is ever exposed.
+
+### Teller (Bank Account Linking)
+| Method | Path | Purpose |
+|---|---|---|
+| POST | `/api/teller/connect` | Save Teller enrollment (access token) after TellerConnect widget success |
+| POST | `/api/teller/sync/[userId]` | Pull accounts + transactions from Teller API (mTLS) → upsert into DB |
+| GET | `/api/teller/accounts/[userId]` | Return linked accounts + enrollments |
+| DELETE | `/api/teller/accounts/[userId]` | Unlink an enrollment (body: `{ enrollmentId }`) — removes accounts + transactions |
+| GET | `/api/teller/transactions/[userId]?month=YYYY-MM` | Transactions for month + totalIn/totalOut/byCategory summary |
+
+**mTLS**: all calls to `api.teller.io` use `TELLER_CERT_PATH` + `TELLER_KEY_PATH` via `lib/teller.ts`.
+**Auth**: Basic auth with `accessToken:` (empty password) per Teller spec.
+**Amount sign**: Teller returns positive amounts for both credits and debits — `type: credit|debit` distinguishes direction.
 
 ### Hub & Bills
 | Method | Path | Purpose |
@@ -393,6 +434,7 @@ app/components/
 - [x] Future/past month bill navigation (‹ › arrows on hub, "Back to today" link)
 - [x] Auto-generated notifications
 - [x] Multi-household infrastructure
+- [x] Teller bank linking (TellerConnect widget, mTLS sync, Money In/Out page)
 
 ### Not Yet Built
 - [ ] Authentication
