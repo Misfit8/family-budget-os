@@ -17,6 +17,8 @@ interface TellerAccount {
   account_subtype: string;
   last_four: string;
   institution: string;
+  balance_available: number | null;
+  balance_ledger: number | null;
   last_synced: string | null;
 }
 
@@ -239,10 +241,18 @@ export default function AccountsPage() {
                   <p className="text-xs text-zinc-400">
                     {acct.account_name} •••• {acct.last_four} · {acct.account_subtype}
                   </p>
+                  {acct.last_synced && (
+                    <p className="text-xs text-zinc-300 mt-0.5">synced {acct.last_synced.slice(0, 10)}</p>
+                  )}
                 </div>
-                {acct.last_synced && (
-                  <p className="text-xs text-zinc-400">{acct.last_synced.slice(0, 10)}</p>
-                )}
+                <div className="text-right">
+                  {acct.balance_available != null && (
+                    <p className="text-sm font-semibold text-zinc-800">${acct.balance_available.toFixed(2)}</p>
+                  )}
+                  {acct.balance_ledger != null && acct.balance_ledger !== acct.balance_available && (
+                    <p className="text-xs text-zinc-400">ledger ${acct.balance_ledger.toFixed(2)}</p>
+                  )}
+                </div>
               </div>
             ))}
             {activeAccounts!.enrollments.map((enr) => (

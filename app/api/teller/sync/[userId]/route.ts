@@ -12,6 +12,11 @@ interface TellerAccount {
   institution: { name: string };
 }
 
+interface TellerBalance {
+  available: string | null;
+  ledger: string | null;
+}
+
 interface TellerTransaction {
   id: string;
   account_id: string;
@@ -46,11 +51,18 @@ export async function POST(
       const accounts = await tellerRequest<TellerAccount[]>("/accounts", enrollment.access_token);
 
       for (const acct of accounts) {
+        const balance = await tellerRequest<TellerBalance>(
+          `/accounts/${acct.id}/balances`,
+          enrollment.access_token
+        ).catch(() => ({ available: null, ledger: null }));
+
         db.prepare(`
-          INSERT INTO teller_accounts (user_id, enrollment_id, account_id, account_name, account_type, account_subtype, last_four, institution, last_synced)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+          INSERT INTO teller_accounts (user_id, enrollment_id, account_id, account_name, account_type, account_subtype, last_four, institution, balance_available, balance_ledger, last_synced)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
           ON CONFLICT(account_id) DO UPDATE SET
             account_name = excluded.account_name,
+            balance_available = excluded.balance_available,
+            balance_ledger = excluded.balance_ledger,
             last_synced = excluded.last_synced
         `).run(
           Number(userId),
@@ -60,7 +72,9 @@ export async function POST(
           acct.type,
           acct.subtype,
           acct.last_four,
-          acct.institution?.name ?? enrollment.institution
+          acct.institution?.name ?? enrollment.institution,
+          balance.available != null ? parseFloat(balance.available) : null,
+          balance.ledger != null ? parseFloat(balance.ledger) : null
         );
         accountsSynced++;
 

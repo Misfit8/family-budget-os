@@ -269,6 +269,8 @@ function initSchema(db: Database.Database) {
   `);
 
   // Other migrations
+  try { db.exec("ALTER TABLE teller_accounts ADD COLUMN balance_available REAL"); } catch { /* already exists */ }
+  try { db.exec("ALTER TABLE teller_accounts ADD COLUMN balance_ledger REAL"); } catch { /* already exists */ }
   try { db.exec("ALTER TABLE runs ADD COLUMN note TEXT"); } catch { /* already exists */ }
   try { db.exec("ALTER TABLE shared_bills ADD COLUMN recurring_bill_id INTEGER"); } catch { /* already exists */ }
   try { db.exec("ALTER TABLE shared_bills ADD COLUMN skipped INTEGER DEFAULT 0"); } catch { /* already exists */ }
